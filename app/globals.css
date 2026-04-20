@@ -564,3 +564,45 @@ tbody td {
   border-radius: var(--radius-md) !important;
   padding: 10px 14px !important;
 }
+
+/* ─────────────────────────────────────────
+   Sidebar Nav Items (previously in styled-jsx)
+───────────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 120ms ease;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.nav-item--active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Header styles (previously in styled-jsx) */
+.header-cta:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Mobile: sidebar hidden */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .header { padding: 0 16px; }
+  .header-cta { display: none; }
+}
+
