@@ -236,11 +236,21 @@ export async function POST(req: NextRequest) {
     let coverImageUrl: string | null = null;
 
     try {
-      [slidesData, captionData, coverImageUrl] = await Promise.all([
+      // 슬라이드와 캡션은 함께 시도 (이미지와 분리)
+      const [slidesResult, captionResult] = await Promise.all([
         generateSlides(effectiveTopic, effectiveCategory, effectiveBrand),
         generateCaption(effectiveTopic, effectiveCategory, effectiveBrand),
-        generateCoverImage(effectiveTopic, effectiveCategory, theme || 'dark'),
       ]);
+      slidesData = slidesResult;
+      captionData = captionResult;
+
+      // 이미지 생성은 별도로 시도 (실패해도 슬라이드에 영향 없음)
+      try {
+        coverImageUrl = await generateCoverImage(effectiveTopic, effectiveCategory, theme || 'dark');
+      } catch {
+        // 이미지 생성 실패는 무시 — 텍스트 슬라이드만 사용
+        coverImageUrl = null;
+      }
     } catch (innerError: any) {
       if (isOpenAIBillingError(innerError)) {
         return NextResponse.json({
