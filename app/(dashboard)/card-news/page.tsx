@@ -113,8 +113,8 @@ function toBrandHandle(name: string) {
 }
 
 // Cover Card
-function CoverCard({ slide, theme, brandName, topic }: {
-  slide: CardSlide; theme: CardTheme; brandName: string; topic: string;
+function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
+  slide: CardSlide; theme: CardTheme; brandName: string; topic: string; coverImageUrl?: string;
 }) {
   const t = themeConfig[theme];
   const emoji = topic.includes('뷰티') ? '✨' :
@@ -128,7 +128,8 @@ function CoverCard({ slide, theme, brandName, topic }: {
       width: '100%', aspectRatio: '1 / 1', borderRadius: 16,
       position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      padding: 28, boxSizing: 'border-box', background: t.coverBg,
+      padding: 28, boxSizing: 'border-box',
+      background: coverImageUrl ? `url(${coverImageUrl}) center/cover no-repeat` : t.coverBg,
     }}>
       <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
       <div style={{ position: 'absolute', top: 40, right: 20, width: 100, height: 100, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
@@ -227,6 +228,7 @@ export default function CardNewsPage() {
   const [copiedIdx,setCopiedIdx]  = useState<number | null>(null);
   const [editSlide,setEditSlide]  = useState<CardSlide | null>(null);
   const [isFallback,setIsFallback]= useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [caption,  setCaption]    = useState('');
   const [hashtags, setHashtags]   = useState<string[]>([]);
   const [captionCopied,    setCaptionCopied]    = useState(false);
@@ -250,6 +252,7 @@ export default function CardNewsPage() {
       const data = await res.json();
       setSlides(data.slides || []);
       if (data.fallback) setIsFallback(true);
+      setCoverImageUrl(data.coverImageUrl || null);
       setCaption(data.caption?.caption || '');
       setHashtags(data.caption?.hashtags || []);
       setCurrentIdx(0);
@@ -275,6 +278,7 @@ export default function CardNewsPage() {
       const data = await res.json();
       setSlides(data.slides || []);
       if (data.fallback) setIsFallback(true);
+      setCoverImageUrl(data.coverImageUrl || null);
       setCaption(data.caption?.caption || '');
       setHashtags(data.caption?.hashtags || []);
       setCurrentIdx(0);
@@ -323,7 +327,7 @@ export default function CardNewsPage() {
   const renderPreview = (idx: number) => {
     if (!slides[idx]) return null;
     if (idx === 0) {
-      return <CoverCard slide={slides[idx]} theme={theme} brandName={brandName || 'My Brand'} topic={topic} />;
+      return <CoverCard slide={slides[idx]} theme={theme} brandName={brandName || 'My Brand'} topic={topic} coverImageUrl={coverImageUrl || undefined} />;
     }
     return <InnerCard slide={slides[idx]} theme={theme} layout={layout} index={idx} total={slides.length} brandName={brandName || 'My Brand'} />;
   };

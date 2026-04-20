@@ -79,7 +79,12 @@
 .cn-editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .cn-editor-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); }
 .cn-fallback-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); font-size: 10px; color: #fbbf24; font-weight: 600; }
-.cn-editor-body { display: grid; grid-template-columns: 220px 1fr 260px; gap: 20px; align-items: start; }
+/* 에디터 바디: 왼쪽(썸네일+미리보기+네비) | 오른쪽(편집 패널) */
+.cn-editor-body { display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start; }
+
+/* 미리보기 컬럼 */
+.cn-preview-col { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+
 
 .cn-slide-list { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; }
 .cn-slide-list-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; }
@@ -122,7 +127,7 @@
 
 @media (max-width: 1100px) {
   .cn-editor-body { grid-template-columns: 1fr; }
-  .cn-preview-col { max-width: 360px; margin: 0 auto; }
+  .cn-preview-col { max-width: 400px; margin: 0 auto; width: 100%; }
 }
 
 /* ── 캡션 + 해시태그 패널 ───────────────────────────────────────────────── */
