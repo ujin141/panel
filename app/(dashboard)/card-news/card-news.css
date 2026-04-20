@@ -1,6 +1,30 @@
 /* card-news 전용 스타일 */
 
-.cn-setup { max-width: 720px; display: flex; flex-direction: column; gap: 8px; }
+/* 새 card-news page 클래스 (재작성된 페이지용) */
+.cn-step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.cn-step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5); flex-shrink: 0; }
+.cn-step-title { font-size: 15px; font-weight: 700; }
+.cn-step-body { display: flex; flex-direction: column; gap: 8px; }
+.cn-category-emoji { font-size: 18px; }
+.cn-category-label { font-size: 13px; font-weight: 600; }
+.cn-category-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-left: auto; }
+.cn-theme-swatch { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+.cn-theme-label { font-size: 12px; }
+.cn-layout-label { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.cn-layout-desc { font-size: 10px; color: rgba(255,255,255,0.35); }
+.cn-thumbnails { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.cn-thumb { position: relative; width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); overflow: hidden; padding: 0; cursor: pointer; transition: all 120ms; }
+.cn-thumb.active { border-color: rgba(255,255,255,0.35); }
+.cn-thumb-preview { width: 100%; aspect-ratio: 2/1; display: flex; align-items: center; justify-content: center; padding: 6px; }
+.cn-thumb-del { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border-radius: 4px; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,0.4); border: none; opacity: 0; transition: opacity 120ms; }
+.cn-thumb:hover .cn-thumb-del { opacity: 1; }
+.cn-thumb-add { width: 100%; padding: 8px; border-radius: 8px; border: 1px dashed rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.3); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 120ms; }
+.cn-thumb-add:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+.cn-preview-card { width: 100%; max-width: 340px; }
+.cn-nav { display: flex; align-items: center; gap: 12px; justify-content: center; }
+.cn-nav-count { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 500; }
+
+
 .cn-step { display: flex; gap: 20px; padding: 24px; background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
 .step-num { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 0.04em; padding-top: 2px; flex-shrink: 0; width: 24px; }
 .step-content { flex: 1; }

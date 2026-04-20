@@ -1,0 +1,50 @@
+/* AI 글쓰기(content) 페이지 전용 스타일 */
+
+.setup-layout { max-width: 720px; display: flex; flex-direction: column; gap: 8px; }
+.setup-step { display: flex; gap: 20px; padding: 24px; background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
+.step-num { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 0.04em; padding-top: 2px; flex-shrink: 0; width: 24px; }
+.step-content { flex: 1; }
+.step-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.step-desc { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 16px; }
+
+.platform-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.platform-choice { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); cursor: pointer; transition: all 150ms; text-align: left; }
+.platform-choice:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); }
+.platform-choice.active { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.07); }
+.platform-choice-emoji { font-size: 22px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.06); border-radius: 8px; flex-shrink: 0; }
+.platform-choice-label { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.platform-choice-desc { font-size: 11px; color: rgba(255,255,255,0.4); }
+.platform-choice-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); margin-left: auto; flex-shrink: 0; transition: all 150ms; }
+.platform-choice-radio.checked { border-color: #fff; background: #fff; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.07); }
+
+.type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.type-choice { padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); cursor: pointer; transition: all 150ms; text-align: left; }
+.type-choice:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); }
+.type-choice.active { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.07); }
+.type-choice-radio { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); transition: all 150ms; }
+.type-choice-radio.checked { border-color: #fff; background: #fff; }
+.type-choice-label { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.type-choice-desc { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; margin-bottom: 8px; }
+.type-choice-example { font-size: 11px; color: rgba(255,255,255,0.25); font-style: italic; }
+
+.target-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.target-preset { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); font-size: 12px; color: rgba(255,255,255,0.55); cursor: pointer; transition: all 150ms; }
+.target-preset:hover { border-color: rgba(255,255,255,0.2); color: #fff; }
+.target-preset.active { border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.08); color: #fff; font-weight: 600; }
+
+.generate-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; background: #fff; color: #000; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 200ms; margin-top: 8px; border: none; }
+.generate-btn:hover:not(:disabled) { background: rgba(255,255,255,0.9); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,255,255,0.15); }
+.generate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.tip-box { display: flex; align-items: flex-start; gap: 8px; padding: 12px 16px; background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); border-radius: 12px; font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+.results-layout { max-width: 760px; }
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.results-list { display: flex; flex-direction: column; gap: 14px; }
+.result-card { padding: 20px; }
+.result-text { font-family: inherit; font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.85); white-space: pre-wrap; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 16px; border: 1px solid rgba(255,255,255,0.06); }
+
+@media (max-width: 700px) {
+  .type-grid { grid-template-columns: 1fr; }
+  .platform-grid { grid-template-columns: 1fr; }
+}
