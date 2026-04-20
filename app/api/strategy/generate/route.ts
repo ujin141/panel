@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 
+// 빌드 시 정적 분석 건너뜀 — OPENAI_API_KEY는 런타임에만 필요
+export const dynamic = 'force-dynamic';
+
+
 function isOpenAIBillingError(error: any): boolean {
   const msg = error?.message || error?.error?.message || '';
   return (

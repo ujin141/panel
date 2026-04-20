@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 
+export const dynamic = 'force-dynamic';
+
 // ─── 폴백 데이터 ────────────────────────────────────────────────────────────────
 const FALLBACK: Record<string, string[]> = {
   curiosity: [

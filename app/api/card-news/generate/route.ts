@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 
+export const dynamic = 'force-dynamic';
+
 // ─── 슬라이드 텍스트 생성 ──────────────────────────────────────────────────────
 async function generateSlides(topic: string, category: string, brandName: string) {
   const categoryPrompts: Record<string, string> = {

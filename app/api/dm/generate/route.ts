@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from '@/lib/openai';
 
+export const dynamic = 'force-dynamic';
+
 const FALLBACK_SCRIPTS: Record<string, string> = {
   first_response: `안녕하세요! 😊
 게시글 보고 DM 주셨군요, 감사해요!
