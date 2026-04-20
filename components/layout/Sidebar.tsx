@@ -48,18 +48,43 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="sidebar">
+    <aside style={{
+      position: 'fixed', top: 0, left: 0,
+      width: 220, height: '100vh',
+      background: '#0d0d0d',
+      borderRight: '1px solid rgba(255,255,255,0.07)',
+      display: 'flex', flexDirection: 'column',
+      zIndex: 100, overflowY: 'auto',
+    }}>
       {/* Logo */}
-      <div className="logo">
-        <div className="logo-icon"><Zap size={15} /></div>
-        <span className="logo-text">PanelAI</span>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 9,
+        padding: '18px 16px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        flexShrink: 0,
+      }}>
+        <div style={{
+          width: 28, height: 28, background: '#fff', color: '#000',
+          borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Zap size={15} />
+        </div>
+        <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em' }}>PanelAI</span>
       </div>
 
       {/* Nav */}
-      <nav className="nav">
+      <nav style={{
+        flex: 1, padding: '12px 8px 8px',
+        display: 'flex', flexDirection: 'column', gap: 18,
+        overflowY: 'auto',
+      }}>
         {navGroups.map((group) => (
-          <div key={group.label} className="nav-group">
-            <p className="nav-group-label">{group.label}</p>
+          <div key={group.label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <p style={{
+              fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.22)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '0 9px', marginBottom: 3,
+            }}>{group.label}</p>
             {group.items.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -79,142 +104,15 @@ export default function Sidebar() {
       </nav>
 
       {/* Goal bar */}
-      <div className="goal">
-        <div className="goal-row">
-          <span className="goal-label">목표 달성률</span>
-          <span className="goal-value">847 / 1,000명</span>
+      <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>목표 달성률</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.65)' }}>847 / 1,000명</span>
         </div>
-        <div className="goal-bar">
-          <div className="goal-fill" style={{ width: '84.7%' }} />
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 999, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: '84.7%', background: '#fff', borderRadius: 999 }} />
         </div>
       </div>
-
-      <style jsx>{`
-        .sidebar {
-          position: fixed;
-          top: 0; left: 0;
-          width: 220px;
-          height: 100vh;
-          background: #0d0d0d;
-          border-right: 1px solid rgba(255,255,255,0.07);
-          display: flex;
-          flex-direction: column;
-          z-index: 100;
-          overflow-y: auto;
-        }
-
-        /* Logo */
-        .logo {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          padding: 18px 16px 16px;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-          flex-shrink: 0;
-        }
-        .logo-icon {
-          width: 28px; height: 28px;
-          background: #fff; color: #000;
-          border-radius: 7px;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .logo-text {
-          font-size: 15px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-        }
-
-        /* Nav */
-        .nav {
-          flex: 1;
-          padding: 12px 8px 8px;
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-          overflow-y: auto;
-        }
-
-        .nav-group {
-          display: flex;
-          flex-direction: column;
-          gap: 1px;
-        }
-
-        .nav-group-label {
-          font-size: 10px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.22);
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 0 9px;
-          margin-bottom: 3px;
-        }
-
-        :global(.nav-item) {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          padding: 8px 10px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 400;
-          color: rgba(255,255,255,0.5);
-          transition: all 120ms ease;
-          text-decoration: none;
-        }
-
-        :global(.nav-item:hover) {
-          background: rgba(255,255,255,0.05);
-          color: rgba(255,255,255,0.85);
-        }
-
-        :global(.nav-item--active) {
-          background: rgba(255,255,255,0.08);
-          color: #fff;
-          font-weight: 500;
-        }
-
-        /* Goal */
-        .goal {
-          padding: 14px 16px;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          flex-shrink: 0;
-        }
-
-        .goal-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 7px;
-        }
-
-        .goal-label {
-          font-size: 11px;
-          color: rgba(255,255,255,0.35);
-        }
-
-        .goal-value {
-          font-size: 11px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.65);
-        }
-
-        .goal-bar {
-          height: 3px;
-          background: rgba(255,255,255,0.08);
-          border-radius: 999px;
-          overflow: hidden;
-        }
-
-        .goal-fill {
-          height: 100%;
-          background: #fff;
-          border-radius: 999px;
-        }
-
-        @media (max-width: 768px) {
-          .sidebar { display: none; }
-        }
-      `}</style>
     </aside>
   );
 }

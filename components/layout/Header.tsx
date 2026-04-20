@@ -7,98 +7,41 @@ export default function Header({ title, subtitle }: { title: string; subtitle?: 
   const pathname = usePathname();
 
   return (
-    <header className="header">
-      <div className="header-left">
-        <h1 className="header-title">{title}</h1>
-        {subtitle && <p className="header-subtitle">{subtitle}</p>}
+    <header style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: 16, height: 'var(--header-height)',
+      padding: '0 32px',
+      background: 'rgba(0,0,0,0.85)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <h1 style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em' }}>{title}</h1>
+        {subtitle && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{subtitle}</p>}
       </div>
-      <div className="header-right">
-        <Link href="/join" className="header-cta" target="_blank">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <Link href="/join" target="_blank" style={{
+          fontSize: 12, fontWeight: 500,
+          padding: '6px 14px', borderRadius: 999,
+          border: '1px solid rgba(255,255,255,0.12)',
+          background: 'rgba(255,255,255,0.04)',
+          color: 'rgba(255,255,255,0.6)',
+          whiteSpace: 'nowrap',
+          textDecoration: 'none',
+        }}>
           🔗 대기자 등록 링크
         </Link>
-        <div className="header-avatar">나</div>
+        <div style={{
+          width: 30, height: 30, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)',
+          cursor: 'pointer', flexShrink: 0,
+        }}>나</div>
       </div>
-
-      <style jsx>{`
-        .header {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 16px;
-          height: var(--header-height);
-          padding: 0 32px;
-          background: rgba(0,0,0,0.85);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .header-left {
-          display: flex;
-          flex-direction: column;
-          gap: 1px;
-        }
-
-        .header-title {
-          font-size: 16px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-        }
-
-        .header-subtitle {
-          font-size: 11px;
-          color: rgba(255,255,255,0.35);
-        }
-
-        .header-right {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-shrink: 0;
-        }
-
-        .header-cta {
-          font-size: 12px;
-          font-weight: 500;
-          padding: 6px 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.04);
-          color: rgba(255,255,255,0.6);
-          transition: all 150ms;
-          white-space: nowrap;
-        }
-
-        .header-cta:hover {
-          border-color: rgba(255,255,255,0.25);
-          color: #fff;
-          background: rgba(255,255,255,0.07);
-        }
-
-        .header-avatar {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 11px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.7);
-          cursor: pointer;
-          flex-shrink: 0;
-        }
-
-        @media (max-width: 768px) {
-          .header { padding: 0 16px; }
-          .header-cta { display: none; }
-        }
-      `}</style>
     </header>
   );
 }

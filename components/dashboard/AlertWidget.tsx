@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle, TrendingDown, Bell, ChevronRight } from 'lucide-react';
+import { AlertTriangle, TrendingDown, ChevronRight } from 'lucide-react';
 
 interface AlertWidgetProps {
   criticalCount?: number;
@@ -12,18 +12,28 @@ export default function AlertWidget({ criticalCount = 1, warningCount = 2 }: Ale
   if (criticalCount === 0 && warningCount === 0) return null;
 
   return (
-    <Link href="/alerts" className="alert-widget">
-      <div className="alert-widget-left">
+    <Link href="/alerts" style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '14px 18px',
+      borderRadius: 'var(--radius-lg)',
+      border: '1px solid rgba(239,68,68,0.2)',
+      background: 'rgba(239,68,68,0.04)',
+      marginBottom: 24,
+      cursor: 'pointer',
+      textDecoration: 'none',
+      transition: 'all 150ms',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {criticalCount > 0 ? (
           <AlertTriangle size={16} style={{ color: 'var(--accent-red)' }} />
         ) : (
           <TrendingDown size={16} style={{ color: 'var(--accent-orange)' }} />
         )}
         <div>
-          <div className="alert-widget-title">
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
             {criticalCount > 0 ? `긴급 알림 ${criticalCount}건` : `주의 알림 ${warningCount}건`}
           </div>
-          <div className="alert-widget-sub">
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
             {criticalCount > 0 ? 'DM 전환율이 임계값 이하입니다' : '성장 지표를 확인하세요'}
           </div>
         </div>
@@ -49,44 +59,6 @@ export default function AlertWidget({ criticalCount = 1, warningCount = 2 }: Ale
         )}
         <ChevronRight size={14} style={{ color: 'var(--text-tertiary)' }} />
       </div>
-
-      <style jsx>{`
-        .alert-widget {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 14px 18px;
-          border-radius: var(--radius-lg);
-          border: 1px solid rgba(239,68,68,0.2);
-          background: rgba(239,68,68,0.04);
-          margin-bottom: 24px;
-          transition: all var(--transition-fast);
-          cursor: pointer;
-        }
-
-        .alert-widget:hover {
-          border-color: rgba(239,68,68,0.35);
-          background: rgba(239,68,68,0.07);
-        }
-
-        .alert-widget-left {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .alert-widget-title {
-          font-size: 13px;
-          font-weight: 600;
-          color: var(--text-primary);
-          margin-bottom: 2px;
-        }
-
-        .alert-widget-sub {
-          font-size: 11px;
-          color: var(--text-tertiary);
-        }
-      `}</style>
     </Link>
   );
 }
