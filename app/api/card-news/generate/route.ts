@@ -256,6 +256,7 @@ export async function POST(req: NextRequest) {
     let slidesData: any = { slides: buildFallbackSlides(effectiveTopic, effectiveBrand, effectiveCategory) };
     let captionData = buildFallbackCaption(effectiveTopic, effectiveCategory, effectiveBrand);
     let coverImageUrl: string | null = null;
+    let imageError: string | null = null;
 
     try {
       // 슬라이드와 캡션은 함께 시도 (이미지와 분리)
@@ -267,7 +268,6 @@ export async function POST(req: NextRequest) {
       captionData = captionResult;
 
       // 이미지 생성: DALL-E 3 → DALL-E 2 폴백
-      let imageError: string | null = null;
       try {
         coverImageUrl = await generateCoverImage(effectiveTopic, effectiveCategory, theme || 'dark');
       } catch (imgErr: any) {
