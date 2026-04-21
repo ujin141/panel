@@ -116,26 +116,47 @@ function buildFallbackCaption(topic: string, category: string, brandName: string
 // ─── DALL-E 3 이미지 생성 ─────────────────────────────────────────────────────
 async function generateCoverImage(topic: string, category: string, theme: string): Promise<string> {
   const themeStyles: Record<string, string> = {
-    dark: 'dark background, minimalist, modern design, high contrast',
-    light: 'clean white background, airy minimal design, soft shadows',
-    'gradient-pink': 'vibrant pink purple gradient background, feminine aesthetic, modern',
-    'gradient-purple': 'rich purple indigo gradient background, elegant, premium',
-    'gradient-blue': 'bright blue gradient background, fresh, energetic',
-    black: 'pure black background, dramatic lighting, luxury aesthetic',
+    dark: 'dark moody background, dramatic shadows, cinematic lighting, deep blacks',
+    light: 'clean white background, soft natural lighting, bright and airy',
+    migo: 'elegant dark background, subtle luxury aesthetic, premium feel',
+    'gradient-pink': 'vibrant pink-to-purple gradient background, feminine, modern',
+    'gradient-purple': 'rich deep purple gradient, premium and elegant',
+    'gradient-blue': 'electric blue gradient, energetic and fresh',
+    'gradient-orange': 'warm orange-to-red gradient, bold and vibrant',
+    'gradient-green': 'fresh green gradient, natural and lush',
+    black: 'pure black background, high contrast, luxury editorial style',
   };
 
-  const categoryStyles: Record<string, string> = {
-    tips: 'flat design icons, knowledge visualization, clean infographic style',
-    facts: 'data visualization, charts, modern statistics infographic',
-    story: 'storytelling illustration, warm human elements, relatable scene',
-    promo: 'product showcase, marketing photography, aspirational lifestyle',
-    howto: 'step-by-step visual guide, instructional design, clear process illustration',
-  };
+  // 주제별 구체적 이미지 설명
+  const topicKeywords = topic.toLowerCase();
+  let topicVisual = '';
+  if (topicKeywords.includes('뷰티') || topicKeywords.includes('스킨') || topicKeywords.includes('화장')) {
+    topicVisual = 'beauty skincare products arranged aesthetically, glowing skin, cosmetics flatlay, rose gold accents';
+  } else if (topicKeywords.includes('다이어트') || topicKeywords.includes('식단') || topicKeywords.includes('헬스')) {
+    topicVisual = 'healthy food bowl, fresh vegetables and fruits, fitness lifestyle, clean eating aesthetic';
+  } else if (topicKeywords.includes('재테크') || topicKeywords.includes('투자') || topicKeywords.includes('돈')) {
+    topicVisual = 'financial growth chart, golden coins, modern banking aesthetic, wealth concept';
+  } else if (topicKeywords.includes('인스타') || topicKeywords.includes('sns') || topicKeywords.includes('마케팅') || topicKeywords.includes('브랜드')) {
+    topicVisual = 'social media growth concept, smartphone with colorful app icons, digital marketing visual';
+  } else if (topicKeywords.includes('루틴') || topicKeywords.includes('아침') || topicKeywords.includes('습관')) {
+    topicVisual = 'morning routine aesthetic, cozy bedroom with soft sunlight, coffee cup and journal, calm lifestyle';
+  } else if (topicKeywords.includes('여행') || topicKeywords.includes('해외')) {
+    topicVisual = 'travel destination landscape, passport and luggage, wanderlust aesthetic, breathtaking scenery';
+  } else if (topicKeywords.includes('요리') || topicKeywords.includes('음식') || topicKeywords.includes('레시피')) {
+    topicVisual = 'beautifully plated food, restaurant quality dish, warm cooking aesthetic, culinary art';
+  } else if (topicKeywords.includes('독서') || topicKeywords.includes('책') || topicKeywords.includes('공부')) {
+    topicVisual = 'stack of books with warm light, cozy reading nook, knowledge and learning concept';
+  } else if (topicKeywords.includes('운동') || topicKeywords.includes('요가') || topicKeywords.includes('필라테스')) {
+    topicVisual = 'fitness workout scene, yoga pose, active lifestyle, athletic aesthetic';
+  } else {
+    topicVisual = `concept visualization for "${topic}", modern Korean lifestyle aesthetic, clean composition`;
+  }
 
-  const dallePrompt = `Instagram card news cover image for topic: "${topic}". 
-Style: ${themeStyles[theme] || themeStyles.dark}, ${categoryStyles[category] || categoryStyles.tips}.
-Square format 1:1, no text overlay, visually stunning, professional social media aesthetic, 
-eye-catching composition. Korean beauty and lifestyle aesthetic.`;
+  const dallePrompt = `Professional Instagram card news cover for topic: "${topic}".
+Visual: ${topicVisual}.
+Style: ${themeStyles[theme] || themeStyles.dark}.
+Format: Square 1:1, no text, no words, no letters, pure visual only.
+Quality: Magazine-quality photography or illustration, stunning social media aesthetic, hyper-detailed.`;
 
   const response = await openai.images.generate({
     model: 'dall-e-3',
@@ -148,6 +169,7 @@ eye-catching composition. Korean beauty and lifestyle aesthetic.`;
 
   return response.data[0].url ?? '';
 }
+
 
 // ─── 빌링 에러 감지 ──────────────────────────────────────────────────────────
 function isOpenAIBillingError(error: any): boolean {

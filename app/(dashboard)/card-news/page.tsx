@@ -117,44 +117,80 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
   slide: CardSlide; theme: CardTheme; brandName: string; topic: string; coverImageUrl?: string;
 }) {
   const t = themeConfig[theme];
-  const emoji = topic.includes('뷰티') ? '✨' :
-    topic.includes('재테크') || topic.includes('돈') ? '💰' :
-    topic.includes('운동') ? '💪' :
-    topic.includes('인스타') || topic.includes('SNS') ? '📱' :
-    topic.includes('루틴') ? '🌅' : '🎯';
+  const emoji = topic.includes('뷰티') || topic.includes('스킨') ? '✨' :
+    topic.includes('재테크') || topic.includes('돈') || topic.includes('투자') ? '💰' :
+    topic.includes('운동') || topic.includes('다이어트') || topic.includes('헬스') ? '💪' :
+    topic.includes('인스타') || topic.includes('SNS') || topic.includes('마케팅') ? '📱' :
+    topic.includes('루틴') || topic.includes('아침') ? '🌅' :
+    topic.includes('요리') || topic.includes('식단') || topic.includes('음식') ? '🍽️' :
+    topic.includes('여행') ? '✈️' :
+    topic.includes('독서') || topic.includes('책') ? '📚' : '🎯';
 
   return (
     <div style={{
       width: '100%', aspectRatio: '1 / 1', borderRadius: 16,
       position: 'relative', overflow: 'hidden',
-      display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      padding: 28, boxSizing: 'border-box',
+      display: 'flex', flexDirection: 'column',
+      padding: 0, boxSizing: 'border-box',
       background: coverImageUrl ? `url(${coverImageUrl}) center/cover no-repeat` : t.coverBg,
     }}>
-      <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
-      <div style={{ position: 'absolute', top: 40, right: 20, width: 100, height: 100, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
-      {t.accentDot && (
-        <div style={{
-          position: 'absolute', top: 28, right: 28,
-          width: 14, height: 14, borderRadius: '50%',
-          background: t.accentDot, zIndex: 3,
-        }} />
+      {/* 이미지 위 오버레이 */}
+      {coverImageUrl && (
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%)', zIndex: 1 }} />
       )}
-      <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 80, opacity: 0.18, zIndex: 1, userSelect: 'none' }}>
-        {emoji}
-      </div>
-      <div style={{ position: 'relative', zIndex: 2 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 10 }}>
-          {t.accentDot && <div style={{ width: 8, height: 8, borderRadius: '50%', background: t.accentDot, flexShrink: 0 }} />}
-          <div style={{ fontSize: 11, fontWeight: 700, color: t.isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.5)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{brandName}</div>
+
+      {/* 장식 원형 (이미지 없을 때) */}
+      {!coverImageUrl && (
+        <>
+          <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: 40, right: 20, width: 100, height: 100, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
+          <div style={{ position: 'absolute', bottom: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: t.decorColor, zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 80, opacity: 0.18, zIndex: 1, userSelect: 'none' }}>
+            {emoji}
+          </div>
+        </>
+      )}
+
+      {/* 상단 브랜드 배지 */}
+      <div style={{
+        position: 'absolute', top: 20, left: 20, zIndex: 3,
+        display: 'flex', alignItems: 'center', gap: 7,
+      }}>
+        <div style={{
+          background: coverImageUrl ? 'rgba(255,255,255,0.18)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'),
+          backdropFilter: 'blur(8px)',
+          border: coverImageUrl ? '1px solid rgba(255,255,255,0.35)' : `1px solid ${t.accentDot || 'rgba(255,255,255,0.2)'}`,
+          borderRadius: 999,
+          padding: '5px 13px',
+          fontSize: 12, fontWeight: 800,
+          color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+        }}>
+          {brandName}
         </div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: t.isDark ? '#fff' : '#111', lineHeight: 1.2, whiteSpace: 'pre-line', letterSpacing: '-0.03em', marginBottom: 10 }}>
+      </div>
+
+      {/* 하단 제목 영역 */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 26px 26px', zIndex: 3 }}>
+        {t.accentDot && !coverImageUrl && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: t.accentDot }} />
+            <div style={{ width: 30, height: 2, background: t.accentDot, borderRadius: 1 }} />
+          </div>
+        )}
+        <div style={{
+          fontSize: 28, fontWeight: 900, lineHeight: 1.2, whiteSpace: 'pre-line',
+          letterSpacing: '-0.03em',
+          color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
+          textShadow: coverImageUrl ? '0 2px 12px rgba(0,0,0,0.5)' : 'none',
+          marginBottom: 12,
+        }}>
           {slide.title || '카드뉴스 제목'}
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <div style={{ height: 2, width: 24, background: t.accentDot || (t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'), borderRadius: 1 }} />
-          <div style={{ fontSize: 11, color: t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)', fontWeight: 600 }}>01 / 05</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ height: 2, width: 20, background: coverImageUrl ? 'rgba(255,255,255,0.6)' : (t.accentDot || 'rgba(255,255,255,0.4)'), borderRadius: 1 }} />
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: coverImageUrl ? 'rgba(255,255,255,0.7)' : (t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)') }}>01 / 05</div>
         </div>
       </div>
     </div>
@@ -168,6 +204,8 @@ function InnerCard({ slide, theme, layout, index, total, brandName }: {
   const t = themeConfig[theme];
   const isLast = index === total - 1;
   const isCenter = layout === 'title-center';
+  const numColors = ['#6366f1','#ec4899','#10b981','#f59e0b','#06b6d4'];
+  const numColor = numColors[(index - 1) % numColors.length];
 
   return (
     <div style={{
@@ -176,38 +214,76 @@ function InnerCard({ slide, theme, layout, index, total, brandName }: {
       display: 'flex', flexDirection: 'column',
       justifyContent: isCenter ? 'center' : 'space-between',
       alignItems: isCenter ? 'center' : 'flex-start',
-      padding: 28, boxSizing: 'border-box',
+      padding: 26, boxSizing: 'border-box',
       textAlign: isCenter ? 'center' : 'left',
       background: t.bg,
     }}>
+      {/* 그라디언트 배경 장식 */}
       {(theme === 'gradient-pink' || theme === 'gradient-purple' || theme === 'gradient-blue' || theme === 'gradient-orange' || theme === 'gradient-green') && (
         <>
           <div style={{ position: 'absolute', top: -50, right: -50, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', zIndex: 0 }} />
           <div style={{ position: 'absolute', bottom: -30, left: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', zIndex: 0 }} />
         </>
       )}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
-        {slide.tag && (
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: t.accent, marginBottom: 12, textTransform: 'uppercase', opacity: 0.7 }}>{slide.tag}</div>
+
+      {/* 상단: 슬라이드 번호 비주얼 + 브랜드 */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        {/* 슬라이드 번호 - 컬러풀하게 */}
+        {!isLast && slide.number && layout !== 'big-number' && (
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: numColor,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, fontWeight: 900, color: '#fff',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+            flexShrink: 0,
+          }}>
+            {slide.number}
+          </div>
         )}
+        {isLast && (
+          <div style={{ fontSize: 24 }}>🌟</div>
+        )}
+        {/* 브랜드명 - 우상단 고정 */}
+        <div style={{
+          fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          background: t.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+          border: `1px solid ${t.accentDot || (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)')}`,
+          borderRadius: 999,
+          padding: '3px 10px',
+          color: t.isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)',
+          marginLeft: 'auto',
+        }}>
+          {brandName}
+        </div>
+      </div>
+
+      {/* 중간: 제목 + 본문 */}
+      <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 0' }}>
         {layout === 'big-number' && slide.number && (
-          <div style={{ fontSize: 80, fontWeight: 900, lineHeight: 0.9, color: t.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', marginBottom: 4, letterSpacing: '-0.05em' }}>{slide.number}</div>
+          <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 0.85, color: t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', marginBottom: 6, letterSpacing: '-0.05em' }}>{slide.number}</div>
         )}
         {layout === 'quote' && (
-          <div style={{ fontSize: 64, lineHeight: 0.7, color: t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)', marginBottom: 12, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
+          <div style={{ fontSize: 56, lineHeight: 0.7, color: t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)', marginBottom: 10, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
         )}
-        <div style={{ fontSize: 22, fontWeight: 800, color: t.text, lineHeight: 1.25, marginBottom: slide.body ? 12 : 0, whiteSpace: 'pre-line', letterSpacing: '-0.02em' }}>
+        {slide.tag && (
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: t.accent, marginBottom: 10, textTransform: 'uppercase', opacity: 0.6 }}>{slide.tag}</div>
+        )}
+        <div style={{ fontSize: 21, fontWeight: 800, color: t.text, lineHeight: 1.3, marginBottom: slide.body ? 10 : 0, whiteSpace: 'pre-line', letterSpacing: '-0.02em' }}>
           {slide.title || '슬라이드 제목'}
         </div>
         {slide.body && (
-          <div style={{ fontSize: 12, lineHeight: 1.75, color: t.accent, whiteSpace: 'pre-line' }}>{slide.body}</div>
+          <div style={{ fontSize: 12, lineHeight: 1.8, color: t.accent, whiteSpace: 'pre-line' }}>{slide.body}</div>
         )}
       </div>
-      {isLast && (
-        <div style={{ position: 'relative', zIndex: 1, fontSize: 11, fontWeight: 700, color: t.accent, letterSpacing: '0.05em', opacity: 0.5 }}>
-          @{toBrandHandle(brandName)}
+
+      {/* 하단: 진행 바 */}
+      <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+        <div style={{ height: 2, background: t.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 1, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${(index / (total - 1)) * 100}%`, background: numColor, borderRadius: 1, transition: 'width 0.3s ease' }} />
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -487,35 +563,41 @@ export default function CardNewsPage() {
             {error && <div className="cn-error" style={{ marginBottom: 16 }}><AlertCircle size={14} /><span>{error}</span></div>}
 
             <div className="cn-editor-body">
-              {/* Preview */}
-              <div className="cn-preview-col">
-                {/* Slide thumbnails */}
-                <div className="cn-thumbnails">
-                  {slides.map((s, i) => (
-                    <button key={s.id} className={'cn-thumb' + (currentIdx === i ? ' active' : '')} onClick={() => goTo(i)}>
-                      <div className="cn-thumb-preview" style={{
-                        background: i === 0 ? themeConfig[theme].coverBg : themeConfig[theme].bg,
-                      }}>
-                        <span style={{ fontSize: 8, color: themeConfig[theme].text, opacity: 0.8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
-                          {s.title}
-                        </span>
-                      </div>
-                      <button className="cn-thumb-del" onClick={e => { e.stopPropagation(); deleteSlide(i); }}>
-                        <Trash2 size={9} />
-                      </button>
+              {/* ── 열 1: 슬라이드 목록 ── */}
+              <div className="cn-slide-panel">
+                {slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    className={'cn-thumb' + (currentIdx === i ? ' active' : '')}
+                    onClick={() => goTo(i)}
+                  >
+                    <div
+                      className="cn-thumb-mini"
+                      style={{ background: i === 0 ? themeConfig[theme].coverBg : themeConfig[theme].bg }}
+                    >
+                      <span style={{ color: themeConfig[theme].text }}>{s.title}</span>
+                    </div>
+                    <div className="cn-thumb-num">{i + 1}</div>
+                    <button
+                      className="cn-thumb-del"
+                      onClick={e => { e.stopPropagation(); deleteSlide(i); }}
+                    >
+                      <Trash2 size={9} />
                     </button>
-                  ))}
-                  <button className="cn-thumb-add" onClick={addSlide}>
-                    <Plus size={14} />
                   </button>
-                </div>
+                ))}
+                <button className="cn-thumb-add" onClick={addSlide}>
+                  <Plus size={14} />
+                </button>
+              </div>
 
-                {/* Main preview */}
-                <div className="cn-preview-card">
+              {/* ── 열 2: 미리보기 ── */}
+              <div className="cn-preview-area">
+                <div className="cn-preview-wrap">
                   {renderPreview(currentIdx)}
                 </div>
 
-                {/* Navigation */}
+                {/* 네비게이션 */}
                 <div className="cn-nav">
                   <button className="cn-nav-btn" onClick={() => goTo(Math.max(0, currentIdx - 1))} disabled={currentIdx === 0}>
                     <ChevronLeft size={16} />
@@ -526,10 +608,16 @@ export default function CardNewsPage() {
                   </button>
                 </div>
 
-                {/* Theme switcher */}
+                {/* 테마 스위처 */}
                 <div className="cn-theme-switcher">
                   {(Object.keys(themeConfig) as CardTheme[]).map(t => (
-                    <button key={t} className={'cn-theme-mini' + (theme === t ? ' active' : '')} onClick={() => setTheme(t)} title={themeConfig[t].label} style={{ background: themeConfig[t].preview }} />
+                    <button
+                      key={t}
+                      className={'cn-theme-mini' + (theme === t ? ' active' : '')}
+                      onClick={() => setTheme(t)}
+                      title={themeConfig[t].label}
+                      style={{ background: themeConfig[t].preview }}
+                    />
                   ))}
                 </div>
               </div>
