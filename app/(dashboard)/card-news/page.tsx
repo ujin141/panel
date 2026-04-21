@@ -305,6 +305,7 @@ export default function CardNewsPage() {
   const [editSlide,setEditSlide]  = useState<CardSlide | null>(null);
   const [isFallback,setIsFallback]= useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const [caption,  setCaption]    = useState('');
   const [hashtags, setHashtags]   = useState<string[]>([]);
   const [captionCopied,    setCaptionCopied]    = useState(false);
@@ -329,6 +330,7 @@ export default function CardNewsPage() {
       setSlides(data.slides || []);
       if (data.fallback) setIsFallback(true);
       setCoverImageUrl(data.coverImageUrl || null);
+      setImageError(data.imageError || null);
       setCaption(data.caption?.caption || '');
       setHashtags(data.caption?.hashtags || []);
       setCurrentIdx(0);
@@ -560,7 +562,19 @@ export default function CardNewsPage() {
               </div>
             )}
 
+            {imageError && !coverImageUrl && (
+              <div style={{ display: 'flex', gap: 8, padding: '10px 14px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.18)', borderRadius: 10, fontSize: 12, color: 'rgba(255,255,255,0.55)', marginBottom: 16, alignItems: 'flex-start', lineHeight: 1.6 }}>
+                <span style={{ flexShrink: 0 }}>🖼️</span>
+                <span>
+                  <strong style={{ color: '#f87171' }}>이미지 생성 실패</strong> — OpenAI에서 이미지 생성 중 오류가 발생했어요.<br />
+                  <span style={{ fontSize: 11, opacity: 0.6 }}>원인: {imageError}</span><br />
+                  <span style={{ opacity: 0.5 }}>슬라이드 텍스트는 정상 생성됐습니다. 이미지 없이 사용하거나 Canva에서 직접 배경 이미지를 추가하세요.</span>
+                </span>
+              </div>
+            )}
+
             {error && <div className="cn-error" style={{ marginBottom: 16 }}><AlertCircle size={14} /><span>{error}</span></div>}
+
 
             <div className="cn-editor-body">
               {/* ── 열 1: 슬라이드 목록 ── */}

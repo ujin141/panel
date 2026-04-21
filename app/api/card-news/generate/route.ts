@@ -266,13 +266,31 @@ export async function POST(req: NextRequest) {
       slidesData = slidesResult;
       captionData = captionResult;
 
-      // 이미지 생성은 별도로 시도 (실패해도 슬라이드에 영향 없음)
+      // 이미지 생성: DALL-E 3 → DALL-E 2 폴백
+      let imageError: string | null = null;
       try {
         coverImageUrl = await generateCoverImage(effectiveTopic, effectiveCategory, theme || 'dark');
-      } catch {
-        // 이미지 생성 실패는 무시 — 텍스트 슬라이드만 사용
-        coverImageUrl = null;
+      } catch (imgErr: any) {
+        imageError = imgErr?.message || 'DALL-E 생성 실패';
+        console.error('[card-news] DALL-E 3 failed:', imgErr?.status, imgErr?.message);
+        // DALL-E 3 실패 → DALL-E 2로 재시도 (더 저렴)
+        try {
+          const { getOpenAI } = await import('@/lib/openai');
+          const resp = await getOpenAI().images.generate({
+            model: 'dall-e-2',
+            prompt: `${effectiveTopic} lifestyle concept, aesthetic Instagram card news cover, clean square composition, no text, no words`,
+            n: 1,
+            size: '512x512',
+          });
+          coverImageUrl = resp.data[0].url ?? null;
+          imageError = null;
+        } catch (img2Err: any) {
+          console.error('[card-news] DALL-E 2 also failed:', img2Err?.status, img2Err?.message);
+          imageError = img2Err?.message || '이미지 생성 불가';
+          coverImageUrl = null;
+        }
       }
+
     } catch (innerError: any) {
       if (isOpenAIBillingError(innerError)) {
         return NextResponse.json({
@@ -290,7 +308,9 @@ export async function POST(req: NextRequest) {
       slides: slidesData.slides,
       caption: captionData,
       coverImageUrl,
+      imageError,
     });
+
   } catch (error: any) {
     console.error('Card news generation error:', (error as any)?.code || 'unknown');
 
