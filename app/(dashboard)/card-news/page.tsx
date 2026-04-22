@@ -740,10 +740,29 @@ export default function CardNewsPage() {
         {step === 'setup' && (
           <div className="cn-setup">
 
-            {/* Step 1: Topic */}
+            {/* Step 1: Category */}
             <div className="cn-step">
               <div className="cn-step-header">
                 <div className="cn-step-num">1</div>
+                <div className="cn-step-title">카드뉴스 유형</div>
+              </div>
+              <div className="cn-step-body">
+                <div className="cn-category-grid">
+                  {(Object.keys(categoryConfig) as CardCategory[]).map(c => (
+                    <button key={c} className={'cn-category-btn' + (category === c ? ' active' : '')} onClick={() => setCategory(c)}>
+                      <span className="cn-category-emoji">{categoryConfig[c].emoji}</span>
+                      <span className="cn-category-label">{categoryConfig[c].label}</span>
+                      <span className="cn-category-desc">{categoryConfig[c].desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Topic */}
+            <div className="cn-step">
+              <div className="cn-step-header">
+                <div className="cn-step-num">2</div>
                 <div className="cn-step-title">카드뉴스 주제</div>
               </div>
               <div className="cn-step-body">
@@ -751,12 +770,12 @@ export default function CardNewsPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: recommendations.length > 0 ? 16 : 0 }}>
                     <div>
                       <h3 style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6', marginBottom: 4 }}>💡 AI 카드뉴스 기획실</h3>
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>직접 주제를 입력하거나, 아래의 AI 추천 기능으로 트래픽을 폭발시켜보세요.</p>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>위에서 선택한 '{categoryConfig[category].label}' 유형에 맞는 떡상 주제를 추천받아 보세요.</p>
                     </div>
                     
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={() => handleRecommend('custom')} disabled={recommending} style={{ flex: 1, background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 8, cursor: 'pointer', opacity: recommending ? 0.7 : 1, transition: 'all 0.2s' }} onMouseEnter={e=>e.currentTarget.style.background='rgba(59,130,246,0.3)'} onMouseLeave={e=>e.currentTarget.style.background='rgba(59,130,246,0.2)'}>
-                        🎯 현재 카테고리 맞춤 추천
+                        🎯 맞춤 추천 받기
                       </button>
                       <button onClick={() => handleRecommend('viral')} disabled={recommending} style={{ flex: 1, background: 'linear-gradient(135deg, #ef4444, #f97316)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 8, cursor: 'pointer', opacity: recommending ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-1px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
                         🔥 글로벌 떡상 트렌드
@@ -794,11 +813,11 @@ export default function CardNewsPage() {
               </div>
             </div>
 
-            {/* Step 2: Brand */}
+            {/* Step 3: Brand */}
             <div className="cn-step">
               <div className="cn-step-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div className="cn-step-num">2</div>
+                  <div className="cn-step-num">3</div>
                   <div className="cn-step-title">브랜드명 (선택)</div>
                 </div>
                 <button
@@ -821,25 +840,6 @@ export default function CardNewsPage() {
                   onChange={e => setBrandName(e.target.value)}
                   maxLength={30}
                 />
-              </div>
-            </div>
-
-            {/* Step 3: Category */}
-            <div className="cn-step">
-              <div className="cn-step-header">
-                <div className="cn-step-num">3</div>
-                <div className="cn-step-title">카드뉴스 유형</div>
-              </div>
-              <div className="cn-step-body">
-                <div className="cn-category-grid">
-                  {(Object.keys(categoryConfig) as CardCategory[]).map(c => (
-                    <button key={c} className={'cn-category-btn' + (category === c ? ' active' : '')} onClick={() => setCategory(c)}>
-                      <span className="cn-category-emoji">{categoryConfig[c].emoji}</span>
-                      <span className="cn-category-label">{categoryConfig[c].label}</span>
-                      <span className="cn-category-desc">{categoryConfig[c].desc}</span>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
