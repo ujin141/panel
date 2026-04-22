@@ -179,9 +179,34 @@ export default function ShortFormPage() {
                 {recommendations.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {recommendations.map((rec, i) => (
-                      <div key={i} onClick={() => { setTopic(rec.topic); setCategory(rec.category); handleGenerate(rec.topic, rec.category); }} style={{ background: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.05)'}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{rec.topic}</div>
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>💡 {rec.reason}</div>
+                      <div key={i} onClick={() => { setTopic(rec.topic); setCategory(rec.category); handleGenerate(rec.topic, rec.category); }} style={{ background: 'rgba(0,0,0,0.3)', padding: 16, borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>{rec.topic}</div>
+                          {rec.viralScore && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(239,68,68,0.15)', padding: '4px 8px', borderRadius: 20, border: '1px solid rgba(239,68,68,0.3)' }}>
+                              <span style={{ fontSize: 12 }}>🔥</span>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5' }}>상위 {100 - rec.viralScore}%</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {rec.estimatedViews && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                            <span style={{ fontSize: 11, background: 'rgba(59,130,246,0.15)', color: '#93c5fd', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>예상 조회수</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{rec.estimatedViews}</span>
+                          </div>
+                        )}
+                        
+                        <div style={{ fontSize: 12, color: '#cbd5e1', marginBottom: 6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                          <span style={{ marginTop: 2 }}>💡</span>
+                          <span style={{ lineHeight: 1.5 }}>{rec.reason}</span>
+                        </div>
+                        
+                        {rec.analysis && (
+                          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)', padding: 10, borderRadius: 6, lineHeight: 1.5, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+                            <strong style={{ color: 'rgba(255,255,255,0.6)' }}>분석 리포트:</strong> {rec.analysis}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

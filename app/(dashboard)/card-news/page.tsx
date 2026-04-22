@@ -14,7 +14,7 @@ import './card-news.css';
 // Types
 type CardTheme = 'migo' | 'dark' | 'light' | 'gradient-pink' | 'gradient-purple' | 'gradient-blue' | 'black' | 'gradient-orange' | 'gradient-green';
 type CardLayout = 'title-center' | 'title-top' | 'big-number' | 'quote';
-type CardCategory = 'tips' | 'facts' | 'story' | 'promo' | 'howto';
+type CardCategory = 'travel' | 'beauty' | 'finance' | 'fitness' | 'mindset' | 'food' | 'it' | 'daily';
 
 interface CardSlide {
   id: string;
@@ -102,11 +102,14 @@ const layoutConfig: Record<CardLayout, { label: string; desc: string; icon: stri
 };
 
 const categoryConfig: Record<CardCategory, { label: string; emoji: string; desc: string }> = {
-  tips:  { label: '꿀팁/노하우', emoji: '💡', desc: '실용적인 팁을 나열하는 카드뉴스' },
-  facts: { label: '통계/사실',   emoji: '📊', desc: '숫자와 데이터로 신뢰감을 주는 카드' },
-  story: { label: '스토리/경험', emoji: '💬', desc: '공감가는 이야기 형식의 카드뉴스' },
-  promo: { label: '홍보/소개',   emoji: '🚀', desc: '서비스나 제품을 소개하는 카드' },
-  howto: { label: '방법/순서',   emoji: '📋', desc: '단계별 방법을 설명하는 카드뉴스' },
+  travel:  { label: '여행/맛집', emoji: '✈️', desc: '여행 코스, 숨은 맛집, 핫플 정보' },
+  beauty:  { label: '뷰티/패션', emoji: '💄', desc: '메이크업 팁, 코디, 제품 리뷰' },
+  finance: { label: '재테크/돈', emoji: '💰', desc: '부업, 주식, 절약, 돈 버는 법' },
+  fitness: { label: '운동/다이어트', emoji: '💪', desc: '홈트 루틴, 식단, 체형 관리' },
+  mindset: { label: '자기계발/동기부여', emoji: '🔥', desc: '마인드셋, 뼈때리는 현실 조언' },
+  food:    { label: '요리/레시피', emoji: '🍳', desc: '초간단 자취 요리, 꿀맛 레시피' },
+  it:      { label: 'IT/AI/꿀팁', emoji: '💻', desc: '숨겨진 꿀기능, AI 활용 노하우' },
+  daily:   { label: '일상/공감', emoji: '💬', desc: '직장인 공감, 썰, 라이프스타일' },
 };
 
 function toBrandHandle(name: string) {
@@ -373,7 +376,7 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
 // Main Page
 export default function CardNewsPage() {
   const [step,      setStep]      = useState<'setup' | 'editor'>('setup');
-  const [category, setCategory]  = useState<CardCategory>('tips');
+  const [category, setCategory]  = useState<CardCategory>('travel');
   const [theme,    setTheme]      = useState<CardTheme>('migo');
   const [layout,   setLayout]     = useState<CardLayout>('title-top');
   const [topic,    setTopic]      = useState('');
@@ -398,7 +401,7 @@ export default function CardNewsPage() {
   const [slideImages,      setSlideImages]      = useState<(string | null)[]>([]);
   const [trends, setTrends] = useState<Array<{topic:string;reason:string;hashtags:string[];hotScore:number;estimatedViews?:string;viewReason?:string;source?:string}>>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
-  const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string}>>([]);
+  const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string;estimatedViews?:string;viralScore?:number;analysis?:string}>>([]);
   const [recommending, setRecommending] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const hiddenRenderRef = useRef<HTMLDivElement>(null);
@@ -786,9 +789,34 @@ export default function CardNewsPage() {
                   {recommendations.length > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {recommendations.map((rec, i) => (
-                        <div key={i} onClick={() => { setTopic(rec.topic); const validCat = Object.keys(categoryConfig).find(k => categoryConfig[k as CardCategory].label === rec.category); if (validCat) setCategory(validCat as CardCategory); }} style={{ background: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.05)'}>
-                          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{rec.topic}</div>
-                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>💡 {rec.reason}</div>
+                        <div key={i} onClick={() => { setTopic(rec.topic); const validCat = Object.keys(categoryConfig).find(k => categoryConfig[k as CardCategory].label === rec.category); if (validCat) setCategory(validCat as CardCategory); }} style={{ background: 'rgba(0,0,0,0.3)', padding: 16, borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                            <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', lineHeight: 1.4 }}>{rec.topic}</div>
+                            {rec.viralScore && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(239,68,68,0.15)', padding: '4px 8px', borderRadius: 20, border: '1px solid rgba(239,68,68,0.3)' }}>
+                                <span style={{ fontSize: 12 }}>🔥</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5' }}>상위 {100 - rec.viralScore}%</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {rec.estimatedViews && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                              <span style={{ fontSize: 11, background: 'rgba(59,130,246,0.15)', color: '#93c5fd', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>예상 조회수</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{rec.estimatedViews}</span>
+                            </div>
+                          )}
+                          
+                          <div style={{ fontSize: 12, color: '#cbd5e1', marginBottom: 6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                            <span style={{ marginTop: 2 }}>💡</span>
+                            <span style={{ lineHeight: 1.5 }}>{rec.reason}</span>
+                          </div>
+                          
+                          {rec.analysis && (
+                            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)', padding: 10, borderRadius: 6, lineHeight: 1.5, borderLeft: '2px solid rgba(255,255,255,0.1)' }}>
+                              <strong style={{ color: 'rgba(255,255,255,0.6)' }}>분석 리포트:</strong> {rec.analysis}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

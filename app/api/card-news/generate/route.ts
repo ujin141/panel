@@ -5,15 +5,18 @@ export const dynamic = 'force-dynamic';
 
 // ─── 슬라이드 텍스트 생성 ──────────────────────────────────────────────────────
 async function generateSlides(topic: string, category: string, brandName: string) {
-  const categoryInstructions: Record<string, string> = {
-    tips: `커버 + 핵심 꿀팁 3가지 + 마무리. 각 꿀팁은 "${topic}"에 진짜로 도움되는 구체적 정보여야 함.`,
-    facts: `커버 + 흥미로운 사실/통계 3가지 + 마무리. 숫자나 구체적 데이터를 포함할 것.`,
-    story: `커버 + 스토리 단계 3개 + 마무리. 여정/경험 중심으로 공감가게 작성.`,
-    promo: `커버 + 핵심 혜택 3가지 + CTA. 구체적 혜택과 차별점을 강조.`,
-    howto: `커버 + 단계별 방법 3가지(STEP 1/2/3) + 마무리. 바로 실천 가능한 방법으로.`,
+  const categoryTranslations: Record<string, string> = {
+    travel: '여행/맛집',
+    beauty: '뷰티/패션',
+    finance: '재테크/돈',
+    fitness: '운동/다이어트',
+    mindset: '자기계발/동기부여',
+    food: '요리/레시피',
+    it: 'IT/AI/꿀팁',
+    daily: '일상/공감'
   };
 
-  const instruction = categoryInstructions[category] || categoryInstructions.tips;
+  const instruction = categoryTranslations[category] || category;
   const currentDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const completion = await openai.chat.completions.create({
@@ -36,13 +39,17 @@ async function generateSlides(topic: string, category: string, brandName: string
 5. 저장/공유 트리거: 마지막 정보 슬라이드에는 "까먹기 전에 무조건 저장🔖", "친구 태그해서 알려주기" 멘트를 교묘하게 넣으세요.
 6. 마지막 슬라이드(CTA): "더 많은 비밀 정보는 @계정명 팔로우"로 강력한 팔로우 압박을 넣으세요.
 7. 줄바꿈은 반드시 \\n으로 처리하여 시각적 타격감을 주세요.
+8. [중요] 슬라이드 개수 동적 할당: 사용자가 제시한 주제에 특정 개수(예: '5가지', '10곳', '7개')가 명시되어 있다면, **반드시 그 개수만큼 본문 슬라이드를 생성**하세요. 
+   - 예: '10곳' -> 커버 1장 + 본문 10장 + CTA 1장 = 총 12장.
+   - 개수가 명시되어 있지 않다면 기본적으로 본문 3~4장을 생성하세요.
+   - 각 슬라이드의 \`tag\` 필드는 '현재 페이지 번호 / 총 페이지 수' 형식으로 정확하게 계산해서 넣으세요.
 
 주제별 떡상 작성법:
 - 정보/꿀팁: 모르면 돈 잃고 시간 날리는 치명적인 꿀팁, 단계별 리스트업.
 - 여행: 절대 실패 안하는 현지인 찐 루트, 웨이팅 피하는 꼼수.
-- 자기계발/돈: 뼈때리는 현실 조언, 구체적 액션 플랜 3가지 필수.
+- 자기계발/돈: 뼈때리는 현실 조언, 구체적 액션 플랜 필수.
 
-JSON 형식:
+JSON 형식 (아래는 3가지 본문일 때의 예시일 뿐, 주제의 개수에 맞춰 슬라이드 배열 크기를 동적으로 조절하세요):
 {
   "slides": [
     { "id": "1", "title": "[극단적 도파민 훅]\\n[결과/부제]", "body": "", "tag": "01 / 05" },
