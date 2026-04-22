@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import {
   Copy, ChevronLeft, ChevronRight,
   Type, LayoutGrid, Info,
   RefreshCw, Check, Plus, Trash2, AlignLeft,
-  AlertCircle,
+  AlertCircle, Download,
 } from 'lucide-react';
+import { logActivity } from '@/lib/activityTracker';
 import './card-news.css';
 
 // Types
@@ -157,15 +158,16 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
         display: 'flex', alignItems: 'center', gap: 7,
       }}>
         <div style={{
-          background: coverImageUrl ? 'rgba(255,255,255,0.18)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'),
+          background: coverImageUrl ? 'rgba(0,0,0,0.35)' : (t.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.8)'),
           backdropFilter: 'blur(8px)',
-          border: coverImageUrl ? '1px solid rgba(255,255,255,0.35)' : `1px solid ${t.accentDot || 'rgba(255,255,255,0.2)'}`,
+          border: coverImageUrl ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${t.accentDot || 'rgba(255,255,255,0.3)'}`,
           borderRadius: 999,
-          padding: '5px 13px',
-          fontSize: 12, fontWeight: 800,
-          color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
-          letterSpacing: '0.06em',
+          padding: '6px 16px',
+          fontSize: 13, fontWeight: 900,
+          color: '#fff',
+          letterSpacing: '0.05em',
           textTransform: 'uppercase',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
         }}>
           {brandName}
         </div>
@@ -180,11 +182,12 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
           </div>
         )}
         <div style={{
-          fontSize: 28, fontWeight: 900, lineHeight: 1.2, whiteSpace: 'pre-line',
+          fontSize: 32, fontWeight: 900, lineHeight: 1.3, whiteSpace: 'pre-line',
           letterSpacing: '-0.03em',
           color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
-          textShadow: coverImageUrl ? '0 2px 12px rgba(0,0,0,0.5)' : 'none',
+          textShadow: coverImageUrl ? '0 2px 16px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5)' : 'none',
           marginBottom: 12,
+          wordBreak: 'keep-all',
         }}>
           {slide.title || '카드뉴스 제목'}
         </div>
@@ -198,14 +201,19 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
 }
 
 // Inner Card
-function InnerCard({ slide, theme, layout, index, total, brandName }: {
-  slide: CardSlide; theme: CardTheme; layout: CardLayout; index: number; total: number; brandName: string;
+function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUrl }: {
+  slide: CardSlide; theme: CardTheme; layout: CardLayout; index: number; total: number; brandName: string; coverImageUrl?: string;
 }) {
   const t = themeConfig[theme];
   const isLast = index === total - 1;
   const isCenter = layout === 'title-center';
   const numColors = ['#6366f1','#ec4899','#10b981','#f59e0b','#06b6d4'];
   const numColor = numColors[(index - 1) % numColors.length];
+
+  // 이미지 오버레이: 테마 색상을 반투명하게 업힙어 독이성 유지
+  const imageOverlay = t.isDark
+    ? 'rgba(0,0,0,0.62)'
+    : 'rgba(255,255,255,0.55)';
 
   return (
     <div style={{
@@ -216,10 +224,20 @@ function InnerCard({ slide, theme, layout, index, total, brandName }: {
       alignItems: isCenter ? 'center' : 'flex-start',
       padding: 26, boxSizing: 'border-box',
       textAlign: isCenter ? 'center' : 'left',
-      background: t.bg,
+      background: coverImageUrl ? `url(${coverImageUrl}) center/cover no-repeat` : t.bg,
     }}>
-      {/* 그라디언트 배경 장식 */}
-      {(theme === 'gradient-pink' || theme === 'gradient-purple' || theme === 'gradient-blue' || theme === 'gradient-orange' || theme === 'gradient-green') && (
+      {/* 이미지 오버레이 (can을 매우 블러 처리) */}
+      {coverImageUrl && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: imageOverlay,
+          backdropFilter: 'blur(1px)',
+          zIndex: 0,
+        }} />
+      )}
+
+      {/* 그라디언트 배경 장식 (이미지 없을 때) */}
+      {!coverImageUrl && (theme === 'gradient-pink' || theme === 'gradient-purple' || theme === 'gradient-blue' || theme === 'gradient-orange' || theme === 'gradient-green') && (
         <>
           <div style={{ position: 'absolute', top: -50, right: -50, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', zIndex: 0 }} />
           <div style={{ position: 'absolute', bottom: -30, left: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', zIndex: 0 }} />
@@ -228,7 +246,7 @@ function InnerCard({ slide, theme, layout, index, total, brandName }: {
 
       {/* 상단: 슬라이드 번호 비주얼 + 브랜드 */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        {/* 슬라이드 번호 - 컬러풀하게 */}
+        {/* 슬라이드 번호 - 컨러풀하게 */}
         {!isLast && slide.number && layout !== 'big-number' && (
           <div style={{
             width: 36, height: 36, borderRadius: '50%',
@@ -246,14 +264,16 @@ function InnerCard({ slide, theme, layout, index, total, brandName }: {
         )}
         {/* 브랜드명 - 우상단 고정 */}
         <div style={{
-          fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+          fontSize: 11, fontWeight: 800, letterSpacing: '0.05em',
           textTransform: 'uppercase',
-          background: t.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-          border: `1px solid ${t.accentDot || (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)')}`,
+          background: coverImageUrl ? 'rgba(0,0,0,0.35)' : (t.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.7)'),
+          backdropFilter: coverImageUrl ? 'blur(8px)' : 'none',
+          border: `1px solid ${coverImageUrl ? 'rgba(255,255,255,0.4)' : (t.accentDot || (t.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'))}`,
           borderRadius: 999,
-          padding: '3px 10px',
-          color: t.isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)',
+          padding: '4px 12px',
+          color: '#fff',
           marginLeft: 'auto',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
         }}>
           {brandName}
         </div>
@@ -262,25 +282,87 @@ function InnerCard({ slide, theme, layout, index, total, brandName }: {
       {/* 중간: 제목 + 본문 */}
       <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 0' }}>
         {layout === 'big-number' && slide.number && (
-          <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 0.85, color: t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)', marginBottom: 6, letterSpacing: '-0.05em' }}>{slide.number}</div>
+          <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 0.85, color: coverImageUrl ? 'rgba(255,255,255,0.15)' : (t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'), marginBottom: 6, letterSpacing: '-0.05em' }}>{slide.number}</div>
         )}
         {layout === 'quote' && (
-          <div style={{ fontSize: 56, lineHeight: 0.7, color: t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)', marginBottom: 10, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
+          <div style={{ fontSize: 56, lineHeight: 0.7, color: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'), marginBottom: 10, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
         )}
         {slide.tag && (
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: t.accent, marginBottom: 10, textTransform: 'uppercase', opacity: 0.6 }}>{slide.tag}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: coverImageUrl ? 'rgba(255,255,255,0.6)' : t.accent, marginBottom: 10, textTransform: 'uppercase', opacity: 0.8 }}>{slide.tag}</div>
         )}
-        <div style={{ fontSize: 21, fontWeight: 800, color: t.text, lineHeight: 1.3, marginBottom: slide.body ? 10 : 0, whiteSpace: 'pre-line', letterSpacing: '-0.02em' }}>
-          {slide.title || '슬라이드 제목'}
+
+        {/* ── 슬라이드 제목: 포인트 강조 ── */}
+        <div style={{ marginBottom: slide.body ? 14 : 0 }}>
+          <div style={{
+            fontSize: 24, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
+            lineHeight: 1.3, whiteSpace: 'pre-line',
+            letterSpacing: '-0.02em',
+            textShadow: coverImageUrl ? '0 2px 14px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.4)' : 'none',
+            wordBreak: 'keep-all',
+          }}>
+            {slide.title || '슬라이드 제목'}
+          </div>
+          {/* 제목 하단 강조 라인 */}
+          {!isLast && slide.title && (
+            <div style={{
+              marginTop: 8,
+              height: 3, width: 40, borderRadius: 2,
+              background: coverImageUrl
+                ? 'rgba(255,255,255,0.7)'
+                : numColor,
+            }} />
+          )}
         </div>
+
+        {/* ── 본문: 읽기 쉬운 구조 ── */}
         {slide.body && (
-          <div style={{ fontSize: 12, lineHeight: 1.8, color: t.accent, whiteSpace: 'pre-line' }}>{slide.body}</div>
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 7,
+          }}>
+            {slide.body.split('\n').map((line, li) => {
+              const trimmed = line.trim();
+              if (!trimmed) return null;
+
+              // 번호 리스트 줄 (1. 2. 또는 이모지로 시작)
+              const isListItem = /^(\d+\.|[✅✔️📌🔖💡⭐🌟🎯👉✨🔥💎🏆💰📍🎁])/.test(trimmed);
+              // 핵심 포인트 줄 (--- 구분선)
+              const isDivider = trimmed === '---' || trimmed === '──';
+
+              if (isDivider) return (
+                <div key={li} style={{ height: 1, background: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), margin: '2px 0' }} />
+              );
+
+              return (
+                <div key={li} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 7,
+                  fontSize: isListItem ? 13.5 : 13,
+                  fontWeight: isListItem ? 700 : 500,
+                  lineHeight: 1.6,
+                  color: coverImageUrl
+                    ? (isListItem ? '#fff' : 'rgba(255,255,255,0.95)')
+                    : (isListItem ? t.text : (t.isDark ? 'rgba(255,255,255,0.85)' : '#333')),
+                  textShadow: coverImageUrl ? '0 1px 8px rgba(0,0,0,0.6)' : 'none',
+                  letterSpacing: '-0.01em',
+                  wordBreak: 'keep-all',
+                }}>
+                  {!isListItem && (
+                    <span style={{
+                      width: 4, height: 4, borderRadius: '50%',
+                      background: coverImageUrl ? 'rgba(255,255,255,0.5)' : numColor,
+                      flexShrink: 0, marginTop: 7,
+                    }} />
+                  )}
+                  <span>{trimmed}</span>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
       {/* 하단: 진행 바 */}
       <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
-        <div style={{ height: 2, background: t.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)', borderRadius: 1, overflow: 'hidden' }}>
+        <div style={{ height: 2, background: coverImageUrl ? 'rgba(255,255,255,0.15)' : (t.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), borderRadius: 1, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${(index / (total - 1)) * 100}%`, background: numColor, borderRadius: 1, transition: 'width 0.3s ease' }} />
         </div>
       </div>
@@ -310,6 +392,40 @@ export default function CardNewsPage() {
   const [hashtags, setHashtags]   = useState<string[]>([]);
   const [captionCopied,    setCaptionCopied]    = useState(false);
   const [hashtagsCopied,   setHashtagsCopied]   = useState(false);
+  const [downloading,      setDownloading]      = useState(false);
+  const [downloadingAll,   setDownloadingAll]   = useState(false);
+  const [downloadingVideo, setDownloadingVideo] = useState(false);
+  const [slideImages,      setSlideImages]      = useState<(string | null)[]>([]);
+  const [trends, setTrends] = useState<Array<{topic:string;reason:string;hashtags:string[];hotScore:number;estimatedViews?:string;viewReason?:string;source?:string}>>([]);
+  const [trendsLoading, setTrendsLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string}>>([]);
+  const [recommending, setRecommending] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const hiddenRenderRef = useRef<HTMLDivElement>(null);
+
+  const handleRecommend = async (type: 'custom' | 'viral') => {
+    setRecommending(true);
+    setRecommendations([]);
+    try {
+      const res = await fetch('/api/card-news/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandName, category, type })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setRecommendations(data.recommendations || []);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setRecommending(false);
+    }
+  };
+
+  useEffect(() => {
+    const savedBrand = localStorage.getItem('panelai_brandName');
+    if (savedBrand) setBrandName(savedBrand);
+  }, []);
 
   const handleGenerate = async () => {
     if (!topic) { setError('주제를 입력해주세요'); return; }
@@ -331,11 +447,13 @@ export default function CardNewsPage() {
       if (data.fallback) setIsFallback(true);
       setCoverImageUrl(data.coverImageUrl || null);
       setImageError(data.imageError || null);
+      setSlideImages(data.slideImages || []);
       setCaption(data.caption?.caption || '');
       setHashtags(data.caption?.hashtags || []);
       setCurrentIdx(0);
       setEditSlide(data.slides?.[0] ?? null);
       setStep('editor');
+      logActivity('card_news');
     } catch (e: any) {
       setError(e.message || '오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
@@ -397,17 +515,220 @@ export default function CardNewsPage() {
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
-  const handleExportAll = () => {
-    const text = slides.map((s, i) => '[슬라이드 ' + (i + 1) + ']\n제목: ' + s.title + (s.body ? '\n본문: ' + s.body : '')).join('\n\n---\n\n');
-    navigator.clipboard.writeText(text);
+
+  // ── 이미지 URL → data URL 변환 (CORS 우회) ────────────────────────────
+  const toDataUrl = async (imgUrl: string): Promise<string> => {
+    try {
+      const res = await fetch(`/api/proxy-image?url=${encodeURIComponent(imgUrl)}`);
+      const blob = await res.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return imgUrl; // 실패시 원본 URL 그대로
+    }
   };
+
+  // ── 슬라이드를 1080×1080 캔버스로 캡처 ─────────────────────────────────
+  const captureSlide = async (idx: number): Promise<HTMLCanvasElement> => {
+    const h2c = (await import('html2canvas')).default as any;
+    const { createRoot } = await import('react-dom/client');
+    const React = await import('react');
+
+    // 슬라이드별 이미지 URL
+    const rawUrl = idx === 0
+      ? coverImageUrl
+      : (slideImages[idx] || coverImageUrl);
+
+    // 이미지를 data URL로 변환 (CORS 우회)
+    let imgDataUrl: string | undefined;
+    if (rawUrl) {
+      imgDataUrl = await toDataUrl(rawUrl);
+    }
+
+    // 숨겨진 컨테이너에 렌더: 내부를 320px로 렌더 후 scale(3.375)으로 1080px처럼 보이게
+    const container = hiddenRenderRef.current!;
+    container.innerHTML = '';
+
+    // 1080px 외부 래퍼 (캡처 대상)
+    const outerEl = document.createElement('div');
+    outerEl.style.cssText = 'width:1080px;height:1080px;overflow:hidden;position:relative;flex-shrink:0;background:transparent;';
+
+    // 320px 내부 카드 (컴포넌트의 자연 크기)
+    const innerEl = document.createElement('div');
+    innerEl.style.cssText = 'width:320px;height:320px;transform-origin:top left;transform:scale(3.375);';
+
+    outerEl.appendChild(innerEl);
+    container.appendChild(outerEl);
+
+    const root = createRoot(innerEl);
+    await new Promise<void>((resolve) => {
+      root.render(
+        React.createElement(
+          React.Fragment,
+          null,
+          idx === 0
+            ? React.createElement(CoverCard, {
+                slide: slides[idx], theme, brandName: brandName || 'My Brand',
+                topic, coverImageUrl: imgDataUrl,
+              })
+            : React.createElement(InnerCard, {
+                slide: slides[idx], theme, layout,
+                index: idx, total: slides.length,
+                brandName: brandName || 'My Brand',
+                coverImageUrl: imgDataUrl,
+              })
+        )
+      );
+      setTimeout(resolve, 600); // 이미지+폰트 로드 대기
+    });
+
+    const canvas = await h2c(outerEl, {
+      scale: 1,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+      width: 1080,
+      height: 1080,
+    });
+
+    root.unmount();
+    container.innerHTML = '';
+    return canvas;
+  };
+
+  // ── 현재 슬라이드 PNG 저장 ──────────────────────────────────────────────
+  const handleDownloadCurrent = useCallback(async () => {
+    if (!hiddenRenderRef.current || downloading) return;
+    setDownloading(true);
+    try {
+      const canvas = await captureSlide(currentIdx);
+      const link = document.createElement('a');
+      link.download = `card-${currentIdx + 1}-${(topic || 'slide').slice(0, 20)}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Download failed:', err);
+      alert('다운로드에 실패했습니다.');
+    } finally {
+      setDownloading(false);
+    }
+  }, [currentIdx, topic, downloading, slides, theme, brandName, layout, coverImageUrl, slideImages]);
+
+  // ── 전체 슬라이드 ZIP 저장 ──────────────────────────────────────────────
+  const handleDownloadAll = useCallback(async () => {
+    if (!hiddenRenderRef.current || downloadingAll || slides.length === 0) return;
+    setDownloadingAll(true);
+    try {
+      const JSZip = (await import('jszip')).default as any;
+      const zip = new JSZip();
+      const folder = zip.folder((topic.slice(0, 20) || 'card-news'));
+
+      for (let i = 0; i < slides.length; i++) {
+        const canvas = await captureSlide(i);
+        const blob = await new Promise<Blob>((resolve, reject) =>
+          canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png')
+        );
+        folder.file(`slide-${String(i + 1).padStart(2, '0')}.png`, blob);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = `${(topic || 'card-news').slice(0, 20)}-slides.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (err) {
+      console.error('ZIP download failed:', err);
+      alert('전체 다운로드에 실패했습니다.');
+    } finally {
+      if (hiddenRenderRef.current) hiddenRenderRef.current.innerHTML = '';
+      setDownloadingAll(false);
+    }
+  }, [slides, theme, brandName, topic, layout, coverImageUrl, slideImages, downloadingAll]);
+
+  // ── 카드뉴스를 MP4/WebM 비디오로 저장 (슬라이드쇼) ──────────────────────────────────────────────
+  const handleDownloadVideo = useCallback(async () => {
+    if (!hiddenRenderRef.current || downloadingVideo || slides.length === 0) return;
+    setDownloadingVideo(true);
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1080;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context error');
+
+      // 30fps로 스트림 생성
+      const stream = canvas.captureStream(30);
+      
+      // 지원되는 포맷 확인 (최우선: mp4, 차선: webm)
+      let mimeType = 'video/webm;codecs=vp9';
+      if (MediaRecorder.isTypeSupported('video/mp4')) {
+        mimeType = 'video/mp4';
+      } else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
+        mimeType = 'video/webm;codecs=h264';
+      }
+
+      const recorder = new MediaRecorder(stream, { mimeType });
+      const chunks: BlobPart[] = [];
+      
+      recorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
+
+      const recordPromise = new Promise<void>((resolve) => {
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: mimeType.split(';')[0] });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+          link.download = `${(topic || 'card-news').slice(0, 20)}-reels.${ext}`;
+          link.click();
+          URL.revokeObjectURL(url);
+          resolve();
+        };
+      });
+
+      recorder.start();
+
+      // 각 슬라이드를 캔버스에 렌더링하고 일정 시간(2.5초) 유지
+      for (let i = 0; i < slides.length; i++) {
+        const slideCanvas = await captureSlide(i);
+        ctx.drawImage(slideCanvas, 0, 0, 1080, 1080);
+        // 2.5초 대기 (슬라이드당 재생 시간)
+        await new Promise(r => setTimeout(r, 2500));
+      }
+
+      // 마지막 프레임이 제대로 녹화되도록 약간 추가 대기
+      await new Promise(r => setTimeout(r, 500));
+      
+      recorder.stop();
+      await recordPromise;
+      
+    } catch (err) {
+      console.error('Video download failed:', err);
+      alert('비디오 변환에 실패했습니다.');
+    } finally {
+      if (hiddenRenderRef.current) hiddenRenderRef.current.innerHTML = '';
+      setDownloadingVideo(false);
+    }
+  }, [slides, theme, brandName, topic, layout, coverImageUrl, slideImages, downloadingVideo]);
 
   const renderPreview = (idx: number) => {
     if (!slides[idx]) return null;
+    // idx=0: coverImageUrl, idx>0: slideImages[idx] (맞춤 이미지) 또는 coverImageUrl 폴백
+    const imgForSlide = idx === 0
+      ? (coverImageUrl || undefined)
+      : (slideImages[idx] || coverImageUrl || undefined);
     if (idx === 0) {
-      return <CoverCard slide={slides[idx]} theme={theme} brandName={brandName || 'My Brand'} topic={topic} coverImageUrl={coverImageUrl || undefined} />;
+      return <CoverCard slide={slides[idx]} theme={theme} brandName={brandName || 'My Brand'} topic={topic} coverImageUrl={imgForSlide} />;
     }
-    return <InnerCard slide={slides[idx]} theme={theme} layout={layout} index={idx} total={slides.length} brandName={brandName || 'My Brand'} />;
+    return <InnerCard slide={slides[idx]} theme={theme} layout={layout} index={idx} total={slides.length} brandName={brandName || 'My Brand'} coverImageUrl={imgForSlide} />;
   };
 
   return (
@@ -426,12 +747,41 @@ export default function CardNewsPage() {
                 <div className="cn-step-title">카드뉴스 주제</div>
               </div>
               <div className="cn-step-body">
+                <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: 16, marginBottom: 20 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: recommendations.length > 0 ? 16 : 0 }}>
+                    <div>
+                      <h3 style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6', marginBottom: 4 }}>💡 AI 카드뉴스 기획실</h3>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>직접 주제를 입력하거나, 아래의 AI 추천 기능으로 트래픽을 폭발시켜보세요.</p>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => handleRecommend('custom')} disabled={recommending} style={{ flex: 1, background: 'rgba(59,130,246,0.2)', border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 8, cursor: 'pointer', opacity: recommending ? 0.7 : 1, transition: 'all 0.2s' }} onMouseEnter={e=>e.currentTarget.style.background='rgba(59,130,246,0.3)'} onMouseLeave={e=>e.currentTarget.style.background='rgba(59,130,246,0.2)'}>
+                        🎯 현재 카테고리 맞춤 추천
+                      </button>
+                      <button onClick={() => handleRecommend('viral')} disabled={recommending} style={{ flex: 1, background: 'linear-gradient(135deg, #ef4444, #f97316)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, padding: '10px 14px', borderRadius: 8, cursor: 'pointer', opacity: recommending ? 0.7 : 1, transition: 'all 0.2s', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-1px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                        🔥 글로벌 떡상 트렌드
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {recommendations.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {recommendations.map((rec, i) => (
+                        <div key={i} onClick={() => { setTopic(rec.topic); const validCat = Object.keys(categoryConfig).find(k => categoryConfig[k as CardCategory].label === rec.category); if (validCat) setCategory(validCat as CardCategory); }} style={{ background: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor='#3b82f6'} onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.05)'}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{rec.topic}</div>
+                          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>💡 {rec.reason}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <input
                     id="topic"
                     type="text"
                     className="form-input"
-                    placeholder="예: 인스타그램 팔로워 1000명 모으는 법"
+                    placeholder="예: 99%가 모르는 인스타그램 팔로워 떡상 비밀"
                     value={topic}
                     onChange={e => setTopic(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleGenerate()}
@@ -439,16 +789,27 @@ export default function CardNewsPage() {
                   />
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                  구체적일수록 더 좋은 카드뉴스가 만들어져요 (예: &ldquo;다이어트 5가지 꿀팁&rdquo;)
+                  자극적이고 구체적일수록 무조건 떡상합니다. (예: &ldquo;의사들도 절대 안 먹는 다이어트 최악의 음식&rdquo;)
                 </div>
               </div>
             </div>
 
             {/* Step 2: Brand */}
             <div className="cn-step">
-              <div className="cn-step-header">
-                <div className="cn-step-num">2</div>
-                <div className="cn-step-title">브랜드명 (선택)</div>
+              <div className="cn-step-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className="cn-step-num">2</div>
+                  <div className="cn-step-title">브랜드명 (선택)</div>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('panelai_brandName', brandName);
+                    alert('브랜드명이 저장되었습니다.');
+                  }}
+                  style={{ fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 10px', color: '#a5b4fc', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  저장
+                </button>
               </div>
               <div className="cn-step-body">
                 <input
@@ -525,6 +886,8 @@ export default function CardNewsPage() {
               <div className="cn-error"><AlertCircle size={14} /><span>{error}</span></div>
             )}
 
+
+
             <button
               className="btn btn-primary btn-lg"
               style={{ width: '100%', marginTop: 8 }}
@@ -580,10 +943,14 @@ export default function CardNewsPage() {
               {/* ── 열 1: 슬라이드 목록 ── */}
               <div className="cn-slide-panel">
                 {slides.map((s, i) => (
-                  <button
+                  <div
                     key={s.id}
                     className={'cn-thumb' + (currentIdx === i ? ' active' : '')}
                     onClick={() => goTo(i)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => e.key === 'Enter' && goTo(i)}
+                    style={{ cursor: 'pointer' }}
                   >
                     <div
                       className="cn-thumb-mini"
@@ -598,7 +965,7 @@ export default function CardNewsPage() {
                     >
                       <Trash2 size={9} />
                     </button>
-                  </button>
+                  </div>
                 ))}
                 <button className="cn-thumb-add" onClick={addSlide}>
                   <Plus size={14} />
@@ -607,7 +974,7 @@ export default function CardNewsPage() {
 
               {/* ── 열 2: 미리보기 ── */}
               <div className="cn-preview-area">
-                <div className="cn-preview-wrap">
+                <div className="cn-preview-wrap" ref={previewRef}>
                   {renderPreview(currentIdx)}
                 </div>
 
@@ -650,19 +1017,102 @@ export default function CardNewsPage() {
                   </div>
                 )}
 
+                <div className="cn-panel-section">
+                  <div className="cn-panel-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>🖼️ 배경 이미지 설정</span>
+                    <label style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
+                      파일 업로드
+                      <input 
+                        type="file" 
+                        accept="image/jpeg, image/png, image/webp" 
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const val = event.target?.result as string;
+                            if (currentIdx === 0) {
+                              setCoverImageUrl(val);
+                            } else {
+                              const newImages = [...slideImages];
+                              newImages[currentIdx] = val;
+                              setSlideImages(newImages);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <input
+                    type="text"
+                    className="cn-textarea"
+                    style={{ minHeight: 'auto', padding: '8px 12px', marginTop: 4 }}
+                    placeholder="또는 이미지 링크 주소 입력 (https://...)"
+                    value={currentIdx === 0 ? (coverImageUrl || '') : (slideImages[currentIdx] || '')}
+                    onChange={e => {
+                      const val = e.target.value || null;
+                      if (currentIdx === 0) {
+                        setCoverImageUrl(val);
+                      } else {
+                        const newImages = [...slideImages];
+                        newImages[currentIdx] = val;
+                        setSlideImages(newImages);
+                      }
+                    }}
+                  />
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 6, lineHeight: 1.4 }}>
+                    PC/폰의 사진을 직접 업로드하거나 URL을 입력하세요.<br/>
+                    비워두면 테마 배경이나 앞장 이미지가 적용돼요.
+                  </div>
+                </div>
+
                 <div className="cn-panel-divider" />
 
-                <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handleCopySlide(slides[currentIdx], currentIdx)}>
-                  {copiedIdx === currentIdx ? <><Check size={13} /> 복사됨!</> : <><Copy size={13} /> 텍스트 복사하기</>}
+                {/* 이미지 다운로드 버튼 */}
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ width: '100%', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', borderColor: 'transparent' }}
+                  onClick={handleDownloadCurrent}
+                  disabled={downloading}
+                >
+                  {downloading
+                    ? <><div className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />저장 중...</>
+                    : <><Download size={13} />이 슬라이드 PNG 저장</>}
                 </button>
 
-                <button className="btn btn-secondary btn-sm" style={{ width: '100%', marginTop: 6 }} onClick={handleExportAll}>
-                  전체 텍스트 내보내기
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ width: '100%', marginTop: 6 }}
+                  onClick={handleDownloadAll}
+                  disabled={downloadingAll || downloadingVideo}
+                >
+                  {downloadingAll
+                    ? <><div className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />{`처리 중... (${slides.length}장)`}</>
+                    : <><Download size={13} />전체 ZIP으로 다운로드</>}
                 </button>
 
-                <div className="cn-tip">
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ width: '100%', marginTop: 8, background: 'linear-gradient(135deg, #ef4444, #f97316)', borderColor: 'transparent', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }}
+                  onClick={handleDownloadVideo}
+                  disabled={downloadingAll || downloadingVideo}
+                >
+                  {downloadingVideo
+                    ? <><div className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />비디오 굽는 중... (약 15초)</>
+                    : <><Download size={13} />🎥 릴스 영상으로 저장 (무음)</>}
+                </button>
+
+                <div className="cn-panel-divider" />
+
+                <button className="btn btn-ghost btn-sm" style={{ width: '100%' }} onClick={() => handleCopySlide(slides[currentIdx], currentIdx)}>
+                  {copiedIdx === currentIdx ? <><Check size={13} /> 텍스트 복사됨!</> : <><Copy size={13} /> 텍스트만 복사</>}
+                </button>
+
+                <div className="cn-tip" style={{ marginTop: 8 }}>
                   <Info size={11} />
-                  <span>텍스트 복사 → Canva에서 배경 위에 붙여넣기하면 바로 완성! ✨</span>
+                  <span>PNG 저장 → 인스타그램에 바로 업로드! ✨</span>
                 </div>
               </div>
             </div>
@@ -703,7 +1153,8 @@ export default function CardNewsPage() {
                         className="btn btn-ghost btn-sm"
                         style={{ fontSize: 11, padding: '3px 10px' }}
                         onClick={async () => {
-                          await navigator.clipboard.writeText(hashtags.join(' '));
+                          const formattedTags = hashtags.map(t => t.startsWith('#') ? t : `#${t}`).join(' ');
+                          await navigator.clipboard.writeText(formattedTags);
                           setHashtagsCopied(true);
                           setTimeout(() => setHashtagsCopied(false), 2000);
                         }}
@@ -713,7 +1164,7 @@ export default function CardNewsPage() {
                     </div>
                     <div className="cn-hashtag-chips">
                       {hashtags.map((tag, i) => (
-                        <span key={i} className="cn-hashtag-chip">{tag}</span>
+                        <span key={i} className="cn-hashtag-chip">{tag.startsWith('#') ? tag : `#${tag}`}</span>
                       ))}
                     </div>
                   </div>
@@ -728,6 +1179,21 @@ export default function CardNewsPage() {
           </div>
         )}
       </div>
+
+      {/* 전체 다운로드용 숨겨진 렌더링 영역 */}
+      <div
+        ref={hiddenRenderRef}
+        style={{
+          position: 'fixed',
+          left: '-9999px',
+          top: 0,
+          width: 1200,
+          height: 1200,
+          overflow: 'visible',
+          pointerEvents: 'none',
+          zIndex: -1,
+        }}
+      />
     </div>
   );
 }

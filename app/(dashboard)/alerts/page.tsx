@@ -40,6 +40,20 @@ export default function AlertsPage() {
   const [thresholds, setThresholds] = useState(defaultThresholds);
   const [showSettings, setShowSettings] = useState(false);
   const [filterSeverity, setFilterSeverity] = useState<string>('all');
+  const [simulating, setSimulating] = useState(false);
+
+  const runSimulator = async () => {
+    setSimulating(true);
+    try {
+      const res = await fetch('/api/simulator/run', { method: 'POST' });
+      if (!res.ok) throw new Error('시뮬레이션 실패');
+      fetchAlerts();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSimulating(false);
+    }
+  };
 
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
@@ -148,6 +162,15 @@ export default function AlertsPage() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={runSimulator}
+              disabled={simulating}
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)', borderColor: 'transparent' }}
+            >
+              {simulating ? <div className="spinner" style={{ width: 12, height: 12 }} /> : <Zap size={12} />}
+              데이터 시뮬레이션 실행
+            </button>
             <button className="btn btn-ghost btn-sm" onClick={fetchAlerts} disabled={loading}>
               <RefreshCw size={12} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
             </button>

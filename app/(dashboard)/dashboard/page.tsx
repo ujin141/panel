@@ -2,52 +2,44 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
-import AlertWidget from '@/components/dashboard/AlertWidget';
 import Link from 'next/link';
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 import {
-  TrendingUp, Users, MessageCircle, Eye,
-  ArrowUpRight, ChevronRight, Zap, RefreshCw,
+  Video, LayoutGrid, Sparkles, CalendarClock,
+  ChevronRight, Zap, RefreshCw, Activity, ArrowRight
 } from 'lucide-react';
-
-interface MetricRow {
-  date: string;
-  views: number;
-  dms: number;
-  waitlist_count: number;
-  installs: number;
-}
+import { getActivityLogs, getTodayActivity, DailyActivity } from '@/lib/activityTracker';
 
 const quickActions = [
   {
+    icon: '🎥',
+    label: '숏폼 영상 만들기',
+    desc: '주제 입력만으로 릴스/쇼츠 대본과 영상 완성',
+    href: '/short-form',
+    color: '#ef4444',
+  },
+  {
+    icon: '🖼️',
+    label: '카드뉴스 제작',
+    desc: '다중 이미지 인스타 카드뉴스 10초 컷',
+    href: '/card-news',
+    color: '#8b5cf6',
+  },
+  {
     icon: '✍️',
-    label: 'AI로 게시글 만들기',
-    desc: '클릭 한 번으로 Threads/인스타 글 10개생성',
+    label: 'AI 텍스트/대본 생성',
+    desc: '도파민을 자극하는 폭발적 텍스트 쓰기',
     href: '/content',
     color: '#3b82f6',
   },
   {
-    icon: '💌',
-    label: 'DM 스크립트 복사',
-    desc: '응답 → 필터링 → 대기자 유도까지 자동 작성',
-    href: '/dm-funnel',
-    color: '#a855f7',
-  },
-  {
-    icon: '📋',
-    label: '대기자 목록 보기',
-    desc: '현재 신청자 확인하고 승인/거절 처리',
-    href: '/waitlist',
-    color: '#22c55e',
-  },
-  {
-    icon: '💡',
-    label: '성장 전략 받기',
-    desc: '앱 카테고리 입력 → 맞춤 성장 로드맵 생성',
-    href: '/strategy',
-    color: '#f97316',
+    icon: '⏰',
+    label: '예약 발행',
+    desc: '만든 콘텐츠를 달력에 정리하고 업로드 예약',
+    href: '/schedule',
+    color: '#10b981',
   },
 ];
 
@@ -58,17 +50,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         background: '#1a1a1a',
         border: '1px solid rgba(255,255,255,0.1)',
         borderRadius: 10,
-        padding: '8px 12px',
-        fontSize: 12,
+        padding: '12px 16px',
+        fontSize: 13,
+        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 5 }}>{label}</div>
+        <div style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 8, fontWeight: 600 }}>{label}</div>
         {payload.map((p: any) => (
-          <div key={p.name} style={{ color: '#fff', display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: p.color, display: 'inline-block' }} />
-            <span style={{ color: 'rgba(255,255,255,0.5)' }}>
-              {p.name === 'views' ? '조회수' : p.name === 'dms' ? 'DM' : '대기자'}:
+          <div key={p.name} style={{ color: '#fff', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, display: 'inline-block' }} />
+            <span style={{ color: 'rgba(255,255,255,0.6)', width: 60 }}>
+              {p.name === 'short_form' ? '숏폼' : p.name === 'card_news' ? '카드뉴스' : '일반 글'}:
             </span>
-            <span style={{ fontWeight: 600 }}>{p.value.toLocaleString()}</span>
+            <span style={{ fontWeight: 700 }}>{p.value}건</span>
           </div>
         ))}
       </div>
@@ -78,81 +71,61 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<MetricRow[]>([]);
+  const [logs, setLogs] = useState<DailyActivity[]>([]);
+  const [today, setToday] = useState<DailyActivity>({ date: '', short_form: 0, card_news: 0, script_gen: 0, dm_funnel: 0 });
   const [loading, setLoading] = useState(true);
-  const [alertCounts, setAlertCounts] = useState({ critical: 0, warning: 0 });
 
-  const fetchData = async () => {
+  const loadData = () => {
     setLoading(true);
-    try {
-      const [metricsRes, alertsRes] = await Promise.all([
-        fetch('/api/metrics?days=7'),
-        fetch('/api/alerts'),
-      ]);
-
-      if (metricsRes.ok) {
-        const { data } = await metricsRes.json();
-        setMetrics(data || []);
-      }
-
-      if (alertsRes.ok) {
-        const { data } = await alertsRes.json();
-        const active = (data || []).filter((a: any) => a.status === 'active');
-        setAlertCounts({
-          critical: active.filter((a: any) => a.severity === 'critical').length,
-          warning: active.filter((a: any) => a.severity === 'warning').length,
-        });
-      }
-    } catch {
-      // Silently fail — UI shows zeros
-    } finally {
+    setTimeout(() => {
+      setLogs(getActivityLogs());
+      setToday(getTodayActivity());
       setLoading(false);
-    }
+    }, 500); // UI 피드백을 위한 살짝의 지연
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { loadData(); }, []);
 
-  // Derived stats from metrics
-  const totalViews = metrics.reduce((s, m) => s + (m.views || 0), 0);
-  const totalDMs = metrics.reduce((s, m) => s + (m.dms || 0), 0);
-  const latestWaitlist = metrics.length > 0 ? metrics[metrics.length - 1].waitlist_count : 0;
-  const todayMetric = metrics.length > 0 ? metrics[metrics.length - 1] : null;
+  // 이번 주 생성량 합계
+  const weekLogs = logs.slice(-7);
+  const weeklyShortForm = weekLogs.reduce((acc, cur) => acc + (cur.short_form || 0), 0);
+  const weeklyCardNews = weekLogs.reduce((acc, cur) => acc + (cur.card_news || 0), 0);
+  const totalGenerations = weeklyShortForm + weeklyCardNews + weekLogs.reduce((acc, cur) => acc + (cur.script_gen || 0), 0);
 
   const summaryCards = [
-    { label: '대기자 수', value: latestWaitlist, icon: Users, color: '#fff' },
-    { label: '오늘 조회수', value: todayMetric?.views ?? 0, icon: TrendingUp, color: '#22c55e' },
-    { label: '7일 총 조회수', value: totalViews, icon: Eye, color: '#3b82f6' },
-    { label: '7일 총 DM', value: totalDMs, icon: MessageCircle, color: '#a855f7' },
+    { label: '오늘 구워낸 숏폼', value: today.short_form, icon: Video, color: '#ef4444' },
+    { label: '오늘 만든 카드뉴스', value: today.card_news, icon: LayoutGrid, color: '#8b5cf6' },
+    { label: '이번 주 총 생성량', value: totalGenerations, icon: Sparkles, color: '#3b82f6' },
+    { label: '활성 활동 일수', value: logs.length, icon: Activity, color: '#10b981' },
   ];
 
-  // Chart data — formatted dates
-  const chartData = metrics.map(m => ({
-    date: new Date(m.date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
-    views: m.views || 0,
-    waitlist: m.waitlist_count || 0,
-    dms: m.dms || 0,
-  }));
-
-  // Funnel: use latest snapshot
-  const funnelSteps = [
-    { label: '게시글 조회', value: totalViews, icon: '👁️' },
-    { label: 'DM 문의', value: totalDMs, icon: '💌' },
-    { label: '대기자 등록', value: latestWaitlist, icon: '📋' },
-    { label: '앱 설치', value: metrics.reduce((s, m) => s + (m.installs || 0), 0), icon: '📱' },
-  ];
+  // 차트 데이터 (최근 7일 강제 채우기)
+  const chartData = [];
+  const d = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const targetDate = new Date(d);
+    targetDate.setDate(targetDate.getDate() - i);
+    const dateStr = targetDate.toISOString().split('T')[0];
+    const existingLog = logs.find(l => l.date === dateStr);
+    
+    chartData.push({
+      date: targetDate.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+      short_form: existingLog?.short_form || 0,
+      card_news: existingLog?.card_news || 0,
+      script_gen: existingLog?.script_gen || 0,
+    });
+  }
 
   return (
     <div>
-      <Header title="대시보드" subtitle="오늘의 성장 현황을 한눈에 확인하세요" />
+      <Header title="내부 워크스페이스" subtitle="PanelAI에서 제작한 콘텐츠 현황을 실시간으로 추적합니다." />
       <div className="page-container animate-fade-in">
-
-        <AlertWidget criticalCount={alertCounts.critical} warningCount={alertCounts.warning} />
 
         {/* Refresh */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-          <button className="btn btn-ghost btn-sm" onClick={fetchData} disabled={loading}>
+          <button className="btn btn-ghost btn-sm" onClick={loadData} disabled={loading}>
             <RefreshCw size={12} style={loading ? { animation: 'spin 1s linear infinite' } : {}} />
-            {loading ? '불러오는 중...' : '새로고침'}
+            {loading ? '불러오는 중...' : '데이터 동기화'}
           </button>
         </div>
 
@@ -163,17 +136,17 @@ export default function DashboardPage() {
             return (
               <div key={m.label} className="metric-card card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon size={17} style={{ color: m.color }} />
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={18} style={{ color: m.color }} />
                   </div>
                   {loading && (
                     <div style={{ width: 40, height: 20, background: 'rgba(255,255,255,0.06)', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
                   )}
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, color: '#fff' }}>
                   {loading ? '—' : m.value.toLocaleString()}
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 5 }}>{m.label}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 8, fontWeight: 500 }}>{m.label}</div>
               </div>
             );
           })}
@@ -181,9 +154,9 @@ export default function DashboardPage() {
 
         {/* ② 빠른 시작 */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Zap size={14} style={{ color: '#f59e0b' }} />
-            지금 바로 할 수 있는 것들
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Zap size={16} style={{ color: '#f59e0b', fill: '#f59e0b' }} />
+            지금 바로 폭풍 성장 시작하기
           </div>
           <div className="quick-actions-grid">
             {quickActions.map((a) => (
@@ -192,116 +165,97 @@ export default function DashboardPage() {
                 <div className="quick-action-label">{a.label}</div>
                 <div className="quick-action-desc">{a.desc}</div>
                 <div className="quick-action-arrow">
-                  바로 가기 <ChevronRight size={12} />
+                  제작하러 가기 <ChevronRight size={12} />
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* ③ 차트 & 퍼널 */}
+        {/* ③ 차트 & 요약 */}
         <div className="chart-row">
           <div className="card chart-block">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>성장 추이</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>최근 7일</div>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>콘텐츠 생산량 추이</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>최근 7일간 AI로 만들어낸 결과물</div>
               </div>
               <div style={{ display: 'flex', gap: 14 }}>
-                {[{ color: '#3b82f6', label: '조회수' }, { color: '#22c55e', label: '대기자' }].map(l => (
-                  <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: l.color, display: 'inline-block' }} />
+                {[{ color: '#ef4444', label: '숏폼' }, { color: '#8b5cf6', label: '카드뉴스' }].map(l => (
+                  <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: l.color, display: 'inline-block' }} />
                     {l.label}
                   </div>
                 ))}
               </div>
             </div>
-            {!loading && chartData.length === 0 ? (
-              <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>
-                📊 지표를 입력하면 그래프가 표시돼요
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: -24 }}>
-                  <defs>
-                    <linearGradient id="gV" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gW" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'rgba(255,255,255,0.25)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={1.5} fill="url(#gV)" />
-                  <Area type="monotone" dataKey="waitlist" stroke="#22c55e" strokeWidth={1.5} fill="url(#gW)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+            
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={chartData} margin={{ top: 10, right: 0, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} allowDecimals={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="short_form" stackId="a" fill="#ef4444" radius={[0, 0, 4, 4]} barSize={32} />
+                <Bar dataKey="card_news" stackId="a" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={32} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* 퍼널 */}
-          <div className="card funnel-block">
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>성장 퍼널</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 18 }}>조회에서 설치까지의 흐름</div>
-            {funnelSteps.map((step, i) => {
-              const base = funnelSteps[0].value || 1;
-              const pct = Math.min(Math.round((step.value / base) * 100), 100);
-              return (
-                <div key={step.label} style={{ marginBottom: i < funnelSteps.length - 1 ? 14 : 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 16 }}>{step.icon}</span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', flex: 1 }}>{step.label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700 }}>{loading ? '—' : step.value.toLocaleString()}</span>
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', width: 30, textAlign: 'right' }}>{pct}%</span>
-                  </div>
-                  <div style={{ height: 5, background: 'rgba(255,255,255,0.07)', borderRadius: 999 }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? 'rgba(255,255,255,0.3)' : i === 1 ? '#3b82f6' : i === 2 ? '#a855f7' : '#22c55e', borderRadius: 999 }} />
-                  </div>
-                  {i < funnelSteps.length - 1 && (
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4, textAlign: 'right' }}>
-                      ↓ 전환율 {funnelSteps[i].value > 0 ? Math.round((funnelSteps[i + 1].value / funnelSteps[i].value) * 100) : 0}%
-                    </div>
-                  )}
+          {/* 시스템 알림 / 배지 영역 */}
+          <div className="card funnel-block" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>성장 오퍼레이션 상태</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>현재 PanelAI 시스템 헬스체크</div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: 'rgba(16, 185, 129, 0.08)', borderRadius: 10, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#10b981', marginBottom: 2 }}>시스템 정상 가동 중</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>AI 생성 엔진 응답속도 최상</div>
                 </div>
-              );
-            })}
+              </div>
+
+              {totalGenerations === 0 && !loading && (
+                <div style={{ padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 10, textAlign: 'center', marginTop: 'auto' }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>🔥</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>첫 번째 떡상을 시작하세요!</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
+                    아직 생성된 콘텐츠가 없습니다. 좌측 버튼을 눌러 바로 만들어보세요.
+                  </div>
+                </div>
+              )}
+              
+              {totalGenerations > 0 && !loading && (
+                <div style={{ padding: 16, background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))', borderRadius: 10, border: '1px solid rgba(139,92,246,0.2)', textAlign: 'center', marginTop: 'auto' }}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>🚀</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: '#c4b5fd' }}>미친 생산성, 아주 좋습니다!</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>
+                    이번 주에만 총 {totalGenerations}개의 콘텐츠를 구워냈어요.
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* ④ 지표 입력 안내 */}
-        {!loading && metrics.length === 0 && (
-          <div className="card" style={{ marginTop: 20, padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
-            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>아직 입력된 성장 지표가 없어요</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 16, lineHeight: 1.7 }}>
-              매일 조회수, DM 수, 대기자 수를 기록하면<br />이 대시보드에서 성장 추이를 확인할 수 있어요.
-            </div>
-            <Link href="/schedule" className="btn btn-primary btn-sm" style={{ display: 'inline-flex' }}>
-              지표 입력하러 가기 →
-            </Link>
-          </div>
-        )}
 
       </div>
 
       <style jsx>{`
-        .metric-card { padding: 18px 20px; }
+        .metric-card { padding: 22px 24px; transition: transform 0.2s; }
+        .metric-card:hover { transform: translateY(-2px); }
 
         .quick-actions-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
+          gap: 14px;
         }
 
         .quick-action-card {
           background: #111;
           border: 1px solid rgba(255,255,255,0.07);
           border-radius: 14px;
-          padding: 18px;
+          padding: 20px;
           display: flex;
           flex-direction: column;
           gap: 6px;
@@ -313,49 +267,50 @@ export default function DashboardPage() {
         .quick-action-card:hover {
           background: #161616;
           border-color: rgba(255,255,255,0.14);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
         .quick-action-emoji {
-          font-size: 24px;
-          margin-bottom: 4px;
+          font-size: 26px;
+          margin-bottom: 8px;
         }
 
         .quick-action-label {
-          font-size: 13px;
+          font-size: 14px;
           font-weight: 700;
           color: #fff;
           line-height: 1.3;
         }
 
         .quick-action-desc {
-          font-size: 11px;
-          color: rgba(255,255,255,0.4);
+          font-size: 12px;
+          color: rgba(255,255,255,0.45);
           line-height: 1.5;
         }
 
         .quick-action-arrow {
           display: flex;
           align-items: center;
-          gap: 3px;
-          font-size: 11px;
+          gap: 4px;
+          font-size: 12px;
           color: rgba(255,255,255,0.3);
-          margin-top: 8px;
+          margin-top: 12px;
+          font-weight: 600;
         }
 
         .quick-action-card:hover .quick-action-arrow {
-          color: rgba(255,255,255,0.6);
+          color: #3b82f6;
         }
 
         .chart-row {
           display: grid;
-          grid-template-columns: 1fr 320px;
+          grid-template-columns: 1fr 340px;
           gap: 16px;
         }
 
-        .chart-block { padding: 20px 22px; }
-        .funnel-block { padding: 20px 22px; }
+        .chart-block { padding: 24px; }
+        .funnel-block { padding: 24px; }
 
         @keyframes spin {
           from { transform: rotate(0deg); }
@@ -379,3 +334,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

@@ -33,6 +33,27 @@ export interface ContentPost {
   target: string;
   content: string;
   is_saved: boolean;
+  views: number;
+  dms: number;
+  comments: number;
+  created_at: string;
+}
+
+export type AlertSeverity = 'critical' | 'warning' | 'info';
+export type AlertStatus = 'active' | 'resolved' | 'snoozed';
+
+export interface GrowthAlert {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  metric: string | null;
+  threshold: number | null;
+  current_value: number | null;
+  action_suggestion: string | null;
+  resolved_at: string | null;
   created_at: string;
 }
 

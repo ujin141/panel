@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'oaidalleapiprodscus.blob.core.windows.net',
       },
+      {
+        protocol: 'https',
+        hostname: '*.blob.core.windows.net',
+      },
     ],
   },
   // Vercel 배포 시 타입/ESLint 에러가 있어도 빌드 통과

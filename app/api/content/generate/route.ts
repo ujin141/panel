@@ -41,6 +41,18 @@ const FALLBACK: Record<string, string[]> = {
     '엊그제 올렸을 때 하루만에 20명 꽉 찼어요\n\n남은 자리 5개\n지금 신청 안 하면 또 대기해야 해요',
     '오픈 알림 신청자 중 랜덤 5명만 먼저 초대해요\n\n지금 DM으로 "신청" 보내주세요\n내일까지만 받아요',
   ],
+  informational: [
+    '일본 여행 전에 꼭 알아야 할 것들 정리해봤어 ✈️\n\n1️⃣ IC카드 미리 충전해 두기\n2️⃣ 구글맵 오프라인 저장 필수\n3️⃣ 편의점 ATM으로 현금 뽑기\n4️⃣ 식당 예약은 무조건 미리\n5️⃣ 짐 보관 서비스 (코인로커) 위치 파악\n\n저장해두면 진짜 도움돼 🔖',
+    '여행 갈 때 항공권 가장 싸게 사는 타이밍\n\n✅ 출발 2~3개월 전이 제일 저렴\n✅ 화·수요일 검색 시 더 낮은 가격 뜸\n✅ 시크릿 창으로 검색 (가격 추적 방지)\n✅ 스카이스캐너 가격 알림 설정해두기\n\n알고 나면 다시는 비싸게 못 삼 💸',
+    '인스타 여행 콘텐츠 저장 많이 받는 공식\n\n📌 제목: "~하는 법" or "~하는 방법"\n📌 숫자 + 리스트 형식 사용\n📌 실제 경험담 + 구체적 정보\n📌 해시태그 5~7개 (과하면 오히려 손해)\n\n저장률 높이면 알고리즘이 알아서 퍼줌 ✨',
+    '숙소 예약할 때 진짜 저렴하게 하는 법\n\n1. 부킹닷컴 vs 에어비앤비 둘 다 비교\n2. 체크인 날짜 하루씩 바꿔보기\n3. 지도 검색으로 숨은 숙소 찾기\n4. 앱 전용 할인 쿡폰 확인\n5. 리뷰 최근 순으로 꼭 확인\n\n이것만 알아도 숙박비 30% 아낄 수 있어 🏨',
+    '여행 짐 싸는 법 (기내 반입 가능한 것들)\n\n✅ 액체류 100ml 이하, 1L 지퍼백 1개\n✅ 보조배터리는 위탁 불가 (기내만 가능)\n✅ 음식물은 대부분 반입 가능 (과일 제외)\n✅ 우산·삼각대 기내 반입 가능\n\n모르면 공항에서 다 버려야 하니까 저장해 💼',
+    '환전 수수료 0원으로 여행 가는 방법\n\n📍 트래블월렛 / 트래블로그 카드 만들기\n→ 현지에서 원화 환전 없이 바로 결제\n→ 환전 수수료 없음\n→ 현지 ATM 출금도 가능\n\n해외여행 갈 때마다 이것만 들고 가 💳',
+    '여행 사진 잘 찍히는 꿀팁 7가지\n\n1. 역광보다 사이드 라이팅 찾기\n2. 황금시간대 (해 뜰 때 / 질 때)\n3. 구도는 삼분할 법칙\n4. 배경 단순하게 정리\n5. 인물보다 배경 먼저 초점\n6. 다양한 각도로 10장 이상 찍기\n7. 폰 렌즈 닦기 (가장 중요 ❗)\n\n저장해두고 다음 여행 때 써봐 📸',
+    '공항에서 절대 하면 안 되는 것들\n\n❌ 출발 1시간 30분 전에 도착\n❌ 여권 유효기간 확인 안 하기\n❌ 보조배터리 위탁 수하물에 넣기\n❌ 충전 안 된 폰으로 탑승권 저장\n❌ 면세품 픽업 게이트 확인 안 하기\n\n이 중 하나라도 걸리면 진짜 힘들어짐 😭',
+    '인스타 여행 계정 팔로워 1000명 만든 방법\n\n📌 니치 + 지역 조합 해시태그 사용\n예: #오사카맛집 #도쿄카페 #파리여행\n📌 릴스 > 피드 > 스토리 우선순위\n📌 같은 시간대에 꾸준히 올리기 (알고리즘)\n📌 댓글에 진짜 대화하듯 답글\n\n6개월 꾸준히 했더니 생각보다 빠르게 늘었어',
+    '식당 웨이팅 없이 맛집 가는 방법\n\n✅ 평일 오전 11시~11시 30분 도착\n✅ 혼자 or 2인 방문이 웨이팅 빠름\n✅ 카카오맵 실시간 웨이팅 확인\n✅ 재방문율 높은 곳 = 진짜 맛집 지표\n✅ 인스타 최신 게시물 시간 확인 (오래된 정보 주의)\n\n저장해두면 여행 때 진짜 유용함 🍽️',
+  ],
 };
 
 function isOpenAIBillingError(error: any): boolean {
@@ -67,7 +79,7 @@ function buildFallback(type: string, count: number): string[] {
 
 export async function POST(request: NextRequest) {
   try {
-    const { platform, type, target, count = 10 } = await request.json();
+    const { platform, type, target, count = 10, category, brandService, topic } = await request.json();
 
     // API 키 없으면 즉시 폴백 반환
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key') {
@@ -75,28 +87,53 @@ export async function POST(request: NextRequest) {
     }
 
     const typeDesc = {
-      curiosity: '호기심을 자극하고 DM을 유도하는',
-      emotion: '감정을 자극하고 공감을 유발하는',
-      scarcity: '희소성과 긴박감으로 즉각 행동을 유발하는',
-    }[type] || '';
+      curiosity:     '호기심을 자극하고 DM을 유도하는',
+      emotion:       '감정을 자극하고 공감을 유발하는',
+      scarcity:      '희소성과 긴박감으로 즉각 행동을 유발하는',
+      informational: '유용한 정보와 팀을 제공해 저장·공유를 유도하는',
+    }[type as string] || '';
 
     const platformDesc = platform === 'threads'
-      ? 'Threads (트위터 형식, 짧고 임팩트 있게)'
-      : 'Instagram (캡션, 해시태그 포함)';
+      ? 'Threads (짧고 임팩트 있게, 3~6줄 분량)'
+      : 'Instagram (캡션 형식, 해시태그 5~8개 포함, 150자 이내)';
+
+    const categoryLine = category ? `카테고리/분야: ${category}` : '';
+    const brandLine    = brandService ? `브랜드/서비스명: ${brandService} (이 이름을 자연스럽게 녹여서 쓰세요)` : '';
+    const topicLine    = topic ? `핵심 주제/키워드: ${topic} (이 주제를 바탕으로 글을 쓰세요)` : '';
+
+    // 정보성 글은 별도 프롬프트 (리스트 형식, 저장/공유 유도)
+    const isInfoType = type === 'informational';
+    const goalLine = isInfoType
+      ? '목표: 저장·공유를 유도하는 실용적 정보 제공'
+      : '목표: 게시글을 본 유저가 DM을 보내거나 대기자 등록을 하도록 유도';
+    const extraRules = isInfoType
+      ? `- 숫자 리스트 형식 (1. 2. 3. 또는 ✅ ✔️ 📌 등 이모지 활용)
+- 실용적이고 구체적인 정보 (막연한 내용 금지)
+- 마지막 줄에 저장 권유 멘트 추가 (저장해두면 유용해요, 저장해두기 🔖 등)
+- 분야 전문가가 쓴 것처럼 신뢰감 있게
+- 리스트 항목은 5~8개가 적당`
+      : `- 너무 광고처럼 보이지 않게, 실제 유저가 쓴 것처럼
+- 카테고리에 맞는 용어와 공감대를 활용`;
+
+    const currentDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
     const prompt = `
-당신은 한국 SNS 바이럴 컨텐츠 전문가입니다.
+당신은 한국 SNS ${isInfoType ? '정보성 콘텐츠' : '바이럴 컨텐츠'} 전문가입니다.
+현재 날짜는 ${currentDate} (2026년) 입니다. 본문에 포함되는 모든 최신 정보, 트렌드, 데이터, 사례는 무조건 2026년 기준이어야 합니다. 낡은 과거 데이터는 철저히 배제하세요.
 다음 조건으로 SNS 게시글을 ${count}개 생성해주세요.
-
 플랫폼: ${platformDesc}
 게시글 유형: ${typeDesc} 게시글
+${categoryLine}
+${brandLine}
+${topicLine}
 타겟 유저: ${target || '20~30대 한국 여성'}
-목표: 게시글을 본 유저가 DM을 보내거나 대기자 등록을 하도록 유도
+${goalLine}
 
 규칙:
-- 각 게시글은 서로 다른 방식으로 작성
-- 자연스러운 한국어로 작성 (SNS 구어체)
-- 너무 광고처럼 보이지 않게
+- 각 게시글은 서로 다른 주제/소재로 작성 (같은 표현 반복 금지)
+- 자연스러운 한국어 SNS 구어체로 작성
+${extraRules}
+- 분야에 따른 구체적인 표현 사용
 - 각 게시글은 ---로 구분
 - 게시글 번호 없이 내용만 작성
 
@@ -110,7 +147,7 @@ ${count}개의 게시글을 작성해주세요:
     });
 
     const text = response.choices[0].message.content || '';
-    const results = text.split('---').map(s => s.trim()).filter(Boolean);
+    const results = text.split('---').map((s: string) => s.trim()).filter(Boolean);
 
     return NextResponse.json({ results });
   } catch (error: any) {

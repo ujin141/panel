@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Sparkles, MessageCircle, Users,
   Filter, Lightbulb, BookOpen, CalendarClock,
-  TrendingUp, Bell, UserSquare2, Zap, LayoutGrid,
+  TrendingUp, Bell, UserSquare2, Zap, LayoutGrid, Video
 } from 'lucide-react';
 
 const navGroups = [
@@ -21,6 +21,7 @@ const navGroups = [
     items: [
       { label: 'AI 글쓰기', href: '/content', icon: Sparkles },
       { label: '카드뉴스 제작', href: '/card-news', icon: LayoutGrid },
+      { label: '숏폼 영상 제작', href: '/short-form', icon: Video },
       { label: '예약 발행', href: '/schedule', icon: CalendarClock },
     ],
   },
