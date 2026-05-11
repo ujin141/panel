@@ -308,7 +308,7 @@ function buildFallbackSlides(topic: string, brandName: string, _category: string
     return [
       { id: '1', title: `Secret tips about\n${topic} you didn't know`, body: '', tag: '01 / 05' },
       { id: '2', title: 'Mind-blowing\nfirst tip', body: `📌 The core point everyone misses\n✅ You can apply this today\n💡 Just doing this will change everything`, tag: '02 / 05', number: '01' },
-      { id: '3', title: 'If you didn\\'t know,\nchange starts now', body: `🔥 Why so many people give up\n✅ Solved with this one method\n💰 A secret that saves time & money`, tag: '03 / 05', number: '02' },
+      { id: '3', title: "If you didn't know,\nchange starts now", body: `🔥 Why so many people give up\n✅ Solved with this one method\n💰 A secret that saves time & money`, tag: '03 / 05', number: '02' },
       { id: '4', title: 'Hidden tip\nexperts use', body: `⭐ You'll wonder why you didn't know\n✅ Actionable tip right now\n👉 Common habit of experts`, tag: '04 / 05', number: '03' },
       { id: '5', title: `You'll lose this\nif you don't save 🔖`, body: `💾 Save it right now\n👉 Follow ${brandName} for weekly tips`, tag: '05 / 05' },
     ];
