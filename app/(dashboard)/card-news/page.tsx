@@ -404,6 +404,7 @@ export default function CardNewsPage() {
   const [downloadingAll,   setDownloadingAll]   = useState(false);
   const [downloadingVideo, setDownloadingVideo] = useState(false);
   const [slideImages,      setSlideImages]      = useState<(string | null)[]>([]);
+  const [pamphletUrl,      setPamphletUrl]      = useState<string | null>(null);
   const [trends, setTrends] = useState<Array<{topic:string;reason:string;hashtags:string[];hotScore:number;estimatedViews?:string;viewReason?:string;source?:string}>>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string;estimatedViews?:string;viralScore?:number;analysis?:string}>>([]);
@@ -693,10 +694,10 @@ export default function CardNewsPage() {
         mimeType = 'video/webm;codecs=h264';
       }
 
-      const stream = videoCanvas.captureStream(30);
+      const stream = videoCanvas.captureStream(60);
       const recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 12_000_000, // 12Mbps — keyframe 생성 용이
+        videoBitsPerSecond: 25_000_000, // 25Mbps — 최고 화질
       });
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data); };
@@ -715,33 +716,78 @@ export default function CardNewsPage() {
         };
       });
 
-      // ── STEP 3: 첫 슬라이드 그린 후 녹화 시작 ───────────────────────────
+      // ── 팜플렛 이미지(선택적) 캔버스에 그리기 ──────────────────────
+      if (pamphletUrl) {
+        const pamphletImg = new Image();
+        await new Promise<void>((resolve, reject) => {
+          pamphletImg.onload = () => resolve();
+          pamphletImg.onerror = reject;
+          pamphletImg.src = pamphletUrl;
+        });
+        const pamCanvas = document.createElement('canvas');
+        pamCanvas.width = 1080;
+        pamCanvas.height = 1080;
+        const pCtx = pamCanvas.getContext('2d')!;
+        
+        pCtx.fillStyle = '#000';
+        pCtx.fillRect(0, 0, 1080, 1080);
+        
+        const scale = Math.min(1080 / pamphletImg.width, 1080 / pamphletImg.height);
+        const w = pamphletImg.width * scale;
+        const h = pamphletImg.height * scale;
+        const x = (1080 - w) / 2;
+        const y = (1080 - h) / 2;
+        pCtx.drawImage(pamphletImg, x, y, w, h);
+        
+        capturedCanvases.push(pamCanvas);
+      }
+
+      // ── STEP 3: 디졸브 전환 효과 준비 ───────────────────────────
       const drawSlide = (sc: HTMLCanvasElement) => {
+        ctx.globalAlpha = 1;
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, 1080, 1080);
         ctx.drawImage(sc, 0, 0, sc.width, sc.height, 0, 0, 1080, 1080);
       };
 
-      // 첫 슬라이드 미리 그리기 (recorder 시작 전)
-      drawSlide(capturedCanvases[0]);
-      await new Promise(r => setTimeout(r, 100)); // 첫 프레임 안정화
-
-      recorder.start(); // 청크 간격 없이 시작 (onstop 시 한번에 flush)
-
-      // ── STEP 4: 슬라이드당 표시 → 검은전환 → 다음 슬라이드 ─────────────
-      const SLIDE_MS  = 2800; // 슬라이드 표시 시간
-      const TRANS_MS  = 200;  // 전환 검은 프레임 (keyframe 강제 생성)
-
-      for (let i = 0; i < capturedCanvases.length; i++) {
-        drawSlide(capturedCanvases[i]);
-        await new Promise(r => setTimeout(r, SLIDE_MS));
-
-        // 슬라이드 전환 시 검은 프레임 + 데이터 플러시 → keyframe 강제 생성
-        if (i < capturedCanvases.length - 1) {
+      const crossfade = async (sc1: HTMLCanvasElement, sc2: HTMLCanvasElement, durationMs: number) => {
+        const fps = 60;
+        const frames = Math.floor((durationMs / 1000) * fps);
+        const intervalMs = 1000 / fps;
+        
+        for (let i = 0; i <= frames; i++) {
+          const alpha = i / frames;
+          ctx.globalAlpha = 1;
           ctx.fillStyle = '#000';
           ctx.fillRect(0, 0, 1080, 1080);
-          recorder.requestData(); // 현재까지 데이터 즉시 flush
-          await new Promise(r => setTimeout(r, TRANS_MS));
+          
+          ctx.globalAlpha = 1 - alpha;
+          ctx.drawImage(sc1, 0, 0, sc1.width, sc1.height, 0, 0, 1080, 1080);
+          
+          ctx.globalAlpha = alpha;
+          ctx.drawImage(sc2, 0, 0, sc2.width, sc2.height, 0, 0, 1080, 1080);
+          
+          if (i % 10 === 0) recorder.requestData();
+          await new Promise(r => setTimeout(r, intervalMs));
+        }
+        ctx.globalAlpha = 1;
+      };
+
+      // ── STEP 4: 녹화 시작 및 재생 (60fps) ─────────────────────────────
+      drawSlide(capturedCanvases[0]);
+      await new Promise(r => setTimeout(r, 100));
+
+      recorder.start();
+
+      const SLIDE_MS = 2500;
+      const FADE_MS  = 600; 
+
+      for (let i = 0; i < capturedCanvases.length; i++) {
+        if (i > 0) drawSlide(capturedCanvases[i]);
+        await new Promise(r => setTimeout(r, SLIDE_MS));
+
+        if (i < capturedCanvases.length - 1) {
+          await crossfade(capturedCanvases[i], capturedCanvases[i + 1], FADE_MS);
         }
       }
 
@@ -757,7 +803,7 @@ export default function CardNewsPage() {
       if (hiddenRenderRef.current) hiddenRenderRef.current.innerHTML = '';
       setDownloadingVideo(false);
     }
-  }, [slides, theme, brandName, topic, layout, coverImageUrl, slideImages, downloadingVideo]);
+  }, [slides, theme, brandName, topic, layout, coverImageUrl, slideImages, downloadingVideo, pamphletUrl]);
 
   const renderPreview = (idx: number) => {
     if (!slides[idx]) return null;
@@ -1383,9 +1429,39 @@ export default function CardNewsPage() {
                     : <><Download size={13} />전체 ZIP으로 다운로드</>}
                 </button>
 
+                {/* 팜플렛 추가 영역 */}
+                <div style={{ marginTop: 12, marginBottom: 8, background: 'rgba(0,0,0,0.2)', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>📖 영상 마지막 팜플렛 추가</span>
+                    <label style={{ cursor: 'pointer', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 4, fontSize: 11, color: '#fff' }}>
+                      업로드
+                      <input 
+                        type="file" 
+                        accept="image/jpeg, image/png, image/webp" 
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = (event) => setPamphletUrl(event.target?.result as string);
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {pamphletUrl ? (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <img src={pamphletUrl} alt="pamphlet" style={{ width: 36, height: 36, borderRadius: 4, objectFit: 'cover' }} />
+                      <button onClick={() => setPamphletUrl(null)} style={{ fontSize: 11, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>제거</button>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>영상 마지막에 추가할 안내/홍보 이미지를 업로드하세요.</div>
+                  )}
+                </div>
+
                 <button
                   className="btn btn-primary btn-sm"
-                  style={{ width: '100%', marginTop: 8, background: 'linear-gradient(135deg, #ef4444, #f97316)', borderColor: 'transparent', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }}
+                  style={{ width: '100%', marginTop: 4, background: 'linear-gradient(135deg, #ef4444, #f97316)', borderColor: 'transparent', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }}
                   onClick={handleDownloadVideo}
                   disabled={downloadingAll || downloadingVideo}
                 >
