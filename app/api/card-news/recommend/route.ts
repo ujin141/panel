@@ -1,123 +1,242 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
-import { openai } from '@/lib/openai';
 
 export const dynamic = 'force-dynamic';
+
+function getOpenAI() {
+  const { OpenAI } = require('openai');
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+// ── 실시간 Google News 수집 ──────────────────────────────────────────────────
+async function fetchLiveNews(query: string): Promise<string[]> {
+  try {
+    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' },
+      next: { revalidate: 0 },
+    });
+    const xml = await res.text();
+    const titles: string[] = [];
+    const r1 = /<item>[\s\S]*?<title><!\[CDATA\[(.*?)\]\]><\/title>/g;
+    let m: RegExpExecArray | null;
+    while ((m = r1.exec(xml)) !== null && titles.length < 12) {
+      titles.push(m[1].trim());
+    }
+    if (titles.length === 0) {
+      const r2 = /<title>(.*?)<\/title>/g;
+      let skip = 0;
+      while ((m = r2.exec(xml)) !== null && titles.length < 12) {
+        if (skip++ < 1) continue;
+        titles.push(m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim());
+      }
+    }
+    return titles;
+  } catch {
+    return [];
+  }
+}
+
+// ── Google Trends ────────────────────────────────────────────────────────────
+async function fetchGoogleTrends(): Promise<string[]> {
+  try {
+    const url = 'https://trends.google.com/trends/hottrends/atom/feed?pn=p73';
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)' },
+      next: { revalidate: 0 },
+    });
+    const xml = await res.text();
+    const titles: string[] = [];
+    const r = /<title>(.*?)<\/title>/g;
+    let m: RegExpExecArray | null;
+    let skip = 0;
+    while ((m = r.exec(xml)) !== null && titles.length < 15) {
+      if (skip++ < 1) continue;
+      titles.push(m[1].replace(/&amp;/g, '&').trim());
+    }
+    return titles;
+  } catch {
+    return [];
+  }
+}
+
+// ── 카테고리별 수집 키워드 ───────────────────────────────────────────────────
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  travel:  ['여행 인기 2026', '봄 여행 핫플 when:7d'],
+  beauty:  ['뷰티 트렌드 2026', '스킨케어 인기 when:7d'],
+  finance: ['재테크 부업 2026', '돈 버는 법 트렌드 when:7d'],
+  fitness: ['다이어트 트렌드 2026', '홈트 인기 when:7d'],
+  mindset: ['자기계발 2026 트렌드', 'N잡러 when:7d'],
+  food:    ['요리 레시피 트렌드 2026', '맛집 인기 when:7d'],
+  it:      ['AI 트렌드 2026 인스타', 'ChatGPT 활용 when:7d'],
+  daily:   ['직장인 트렌드 2026', '라이프스타일 인기 when:7d'],
+};
 
 export async function POST(req: NextRequest) {
   try {
     const { brandName, category, type = 'custom' } = await req.json();
-    
-    const categoryTranslations: Record<string, string> = {
-      travel: '여행/맛집',
-      beauty: '뷰티/패션',
-      finance: '재테크/돈',
-      fitness: '운동/다이어트',
-      mindset: '자기계발/동기부여',
-      food: '요리/레시피',
-      it: 'IT/AI/꿀팁',
-      daily: '일상/공감'
+
+    const catTranslations: Record<string, string> = {
+      travel: '여행/맛집', beauty: '뷰티/패션', finance: '재테크/돈',
+      fitness: '운동/다이어트', mindset: '자기계발/동기부여',
+      food: '요리/레시피', it: 'IT/AI/꿀팁', daily: '일상/공감',
     };
-    const translatedCategory = categoryTranslations[category] || category;
-    
-    // 1. Supabase에서 사용자의 최근 성과 게시물 가져오기
+    const catKr = catTranslations[category] || category;
+
+    // 실시간 뉴스 수집
+    const catKeywords = CATEGORY_KEYWORDS[category] || ['인스타 트렌드 when:7d', '카드뉴스 바이럴 when:7d'];
+    const [news1, news2, trends] = await Promise.all([
+      fetchLiveNews(catKeywords[0]),
+      fetchLiveNews(catKeywords[1] || catKeywords[0]),
+      fetchGoogleTrends(),
+    ]);
+
+    const allTitles = [...news1, ...news2, ...trends]
+      .filter(Boolean)
+      .filter((t, i, arr) => arr.indexOf(t) === i)
+      .slice(0, 30);
+
+    const liveData = allTitles.length > 0
+      ? `[실시간 수집 데이터 (${allTitles.length}건)]\n${allTitles.map((t, i) => `${i + 1}. ${t}`).join('\n')}`
+      : '[실시간 데이터 없음 - AI 자체 2026년 트렌드 분석으로 대체]';
+
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
+
     let accountContext = '';
-    
-    if (user) {
+    const unauth = await requirePinSession();
+    if (!unauth) {
       const { data: posts } = await supabase
         .from('content_posts')
         .select('content, views, dms')
-        .eq('user_id', user.id)
+        .eq('user_id', OWNER_ID)
         .order('views', { ascending: false })
         .limit(5);
-        
       if (posts && posts.length > 0) {
-        accountContext = `
-[우리 계정 최근 우수 게시물 성과]
-${posts.map(p => `- 내용: ${p.content.split('|||')[0]}\n  조회수: ${p.views}, 전환수: ${p.dms}`).join('\n')}
-`;
+        accountContext = `\n[내 계정 최근 성과]\n${posts.map(p =>
+          `- ${p.content.split('|||')[0]} | 조회: ${p.views} | 전환: ${p.dms}`
+        ).join('\n')}`;
       }
     }
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key') {
-      return NextResponse.json({
-        recommendations: [
-          { topic: '인스타 떡상하는 상위 1% 카드뉴스 템플릿', reason: '실무자들이 환장하고 저장하는 레퍼런스입니다.', category: '정보/꿀팁', estimatedViews: '15만~30만', viralScore: 95, analysis: '마케터들의 실무 갈증을 해소하는 템플릿 제공으로 무한 공유가 일어납니다.' },
-          { topic: '마케터라면 무조건 알아야 할 AI 툴 5가지', reason: '저장과 공유가 폭발적으로 일어나는 주제입니다.', category: '정보/꿀팁', estimatedViews: '5만~10만', viralScore: 88, analysis: '최신 AI 정보에 뒤쳐지기 싫은 심리를 자극하여 저장 버튼을 누르게 만듭니다.' },
-          { topic: '초보 사장님을 위한 세금 폭탄 피하는 법', reason: '결핍과 공포를 자극하여 클릭률이 극대화됩니다.', category: '정보/꿀팁', estimatedViews: '20만~50만', viralScore: 98, analysis: '돈과 직결된 공포 마케팅으로 타겟층의 도파민을 강력하게 자극합니다.' }
-        ]
-      });
+      return NextResponse.json({ recommendations: getFallback(catKr) });
     }
+
+    const today = new Date().toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    });
 
     let systemPrompt = '';
     let userPrompt = '';
 
-    const currentDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-
     if (type === 'viral') {
-      systemPrompt = `당신은 대한민국 인스타그램 카드뉴스 트래픽을 폭발시키는 '메가 트렌드 헌터'입니다.
-현재 시간은 ${currentDate} (2026년) 입니다. 
-과거(2023년 등)의 트렌드는 절대 언급하지 마세요. 현재 2026년 최신 인스타그램 탐색탭에서 **[${translatedCategory}]** 분야를 중심으로, 가장 조회수와 저장이 폭발적으로 터지고 있는 글로벌/국내 실시간 카드뉴스 주제 3가지를 추천해 주세요.
-반드시 **[${translatedCategory}]** 카테고리에 맞는 주제여야 하며, 대중의 도파민을 자극하고 무조건 '저장(Save)' 버튼을 누를 수밖에 없는 압도적인 주제여야 합니다.
+      systemPrompt = `당신은 2026년 대한민국 인스타그램 카드뉴스 트래픽 폭발 전문가입니다.
+오늘: ${today}
+아래 실시간 수집된 최신 뉴스/트렌드 데이터를 분석하여, 지금 당장 [${catKr}] 카테고리에서 인스타그램 저장·공유가 폭발할 카드뉴스 주제 3개를 선별합니다.
 
-응답 형식 (JSON):
+바이럴 법칙:
+1. 결핍 자극 (돈·외모·건강·불안) → 무조건 저장 버튼 유도
+2. 강력한 숫자+호기심 ("99%가 모르는", "단 3가지", "절대 하면 안 되는")
+3. 리스트형 구성이 저장율 300% 높음
+4. 실시간 뉴스 이슈와 연결될수록 초기 확산력 폭발`;
+
+      userPrompt = `카테고리: ${catKr}
+브랜드: ${brandName || '일반 계정'}
+
+${liveData}${accountContext}
+
+위 실시간 데이터를 반영해서, 지금 이 순간 인스타 저장이 폭발할 카드뉴스 주제 3개를 JSON으로:
 {
   "recommendations": [
     {
-      "topic": "제안하는 떡상 카드뉴스 주제 (예: 99%가 모르는 카카오톡 숨겨진 기능 5가지)",
-      "reason": "왜 이 주제가 지금 트래픽이 폭발하는지 핵심 이유 (30자 이내)",
+      "topic": "카드뉴스 주제 (20자 이내, 임팩트 있게)",
+      "reason": "왜 지금 트래픽이 폭발하는지 (30자 이내, 수집된 데이터 근거 포함)",
       "category": "${category}",
-      "estimatedViews": "예상 조회수 (예: 10만~30만)",
-      "viralScore": 95,
-      "analysis": "어떤 심리적 트리거(공포, 이득, 호기심 등)가 작동하며, 알고리즘이 어떻게 타겟층에게 도달시킬지 100자 이내로 구체적으로 분석"
+      "estimatedViews": "예상 인스타 조회수 (예: 20만~50만)",
+      "viralScore": 97,
+      "analysis": "어떤 심리 트리거+알고리즘이 작동하는지 구체적으로 (60자 이내)"
     }
   ]
 }`;
-      userPrompt = `타겟 카테고리: ${translatedCategory}\n브랜드명: ${brandName || '일반 계정'} (참고만 하고 무조건 트래픽 터지는 트렌드로 추천해라)`;
     } else {
-      systemPrompt = `당신은 저장과 공유를 무조건 10배 이상 터뜨리는 인스타그램 카드뉴스 기획의 신입니다.
-현재 시간은 ${currentDate} (2026년) 입니다. 과거의 낡은 트렌드 대신 2026년 현재 먹히는 최신 정보만 다루세요.
-사용자의 브랜드명, 기존 성과 데이터, 그리고 요청된 **[${translatedCategory}]** 분야에 가장 잘 맞으면서 현재 인스타 알고리즘 트렌드에서 무조건 트래픽이 폭발할 카드뉴스 주제 3가지를 추천해 주세요.
+      systemPrompt = `당신은 2026년 인스타그램 카드뉴스 기획의 신입니다.
+오늘: ${today}
+실시간 뉴스 데이터를 분석해서, [${catKr}] 카테고리에 맞는 최적 카드뉴스 주제 3개를 추천합니다.
 
-[초극강 바이럴 최적화 법칙]
-1. 시청자의 결핍(돈, 시간, 외모, 건강)을 강하게 건드릴 것.
-2. 강력한 호기심 유발 (예: "99%가 모르는", "절대 하면 안 되는", "10년차 전문가가 숨기는")
-3. 리스트형태 (예: "~하는 법 5가지", "BEST 3") - 카드뉴스는 무조건 리스트형이 저장이 많이 일어납니다.
+핵심 원칙:
+- 실제 이슈 + 감성 트리거 결합
+- 리스트형·숫자형 제목 우선
+- 저장 유도를 위한 정보 밀도 높은 주제
+- 브랜드 계정 성격에 맞는 전문성 어필`;
 
-응답 형식 (JSON):
+      userPrompt = `브랜드: ${brandName || '일반 계정'}
+카테고리: ${catKr}
+
+${liveData}${accountContext}
+
+실시간 데이터 기반 맞춤 카드뉴스 주제 3개 JSON:
 {
   "recommendations": [
     {
-      "topic": "제안하는 구체적인 카드뉴스 주제 (예: 30대 직장인 뱃살 2주 컷 현실 식단 BEST 5)",
-      "reason": "왜 이 주제가 저장이 폭발할 수밖에 없는지 심리학적 분석 (30자 이내)",
+      "topic": "구체적인 카드뉴스 주제 (20자 이내)",
+      "reason": "왜 저장이 폭발하는지 심리 분석 (30자 이내)",
       "category": "${category}",
-      "estimatedViews": "예상 조회수 (예: 50만~100만)",
-      "viralScore": 98,
-      "analysis": "현재 ${translatedCategory} 시장의 트렌드와 결합하여 어떤 타겟층이 왜 열광할 수밖에 없는지 100자 이내로 상세하게 분석"
+      "estimatedViews": "예상 조회수",
+      "viralScore": 92,
+      "analysis": "타겟층과 확산 메커니즘 구체 분석 (60자 이내)"
     }
   ]
 }`;
-      userPrompt = `브랜드명: ${brandName || '일반 계정'}\n타겟 카테고리: ${translatedCategory}\n${accountContext}`;
     }
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
+        { role: 'user', content: userPrompt },
       ],
       response_format: { type: 'json_object' },
       temperature: 0.9,
     });
 
     const parsed = JSON.parse(completion.choices[0].message.content || '{}');
-    
-    return NextResponse.json({ recommendations: parsed.recommendations || [] });
+    return NextResponse.json({
+      recommendations: parsed.recommendations || [],
+      realtime: allTitles.length > 0,
+      fetchedCount: allTitles.length,
+    });
   } catch (error: any) {
-    console.error('Trend recommend error:', error);
+    console.error('Recommend error:', error);
     return NextResponse.json({ error: error.message || '주제 추천 중 오류가 발생했습니다.' }, { status: 500 });
   }
+}
+
+function getFallback(catKr: string) {
+  return [
+    {
+      topic: `${catKr} 99%가 모르는 비밀 5가지`,
+      reason: '호기심+결핍 자극으로 저장 폭발',
+      category: 'general',
+      estimatedViews: '10만~30만',
+      viralScore: 95,
+      analysis: '정보 격차를 자극하는 제목으로 저장률 최상위권 달성 가능',
+    },
+    {
+      topic: `2026년 지금 당장 해야 할 ${catKr} TOP 3`,
+      reason: '연도+긴박감 조합으로 클릭율 극대화',
+      category: 'general',
+      estimatedViews: '5만~15만',
+      viralScore: 90,
+      analysis: '현재성+행동 유도 조합으로 탐색탭 노출 최적화',
+    },
+    {
+      topic: `전문가도 절대 안 알려주는 ${catKr} 꿀팁`,
+      reason: '전문가 권위+비밀 프레임 저장율 상위',
+      category: 'general',
+      estimatedViews: '3만~10만',
+      viralScore: 85,
+      analysis: '신뢰도+희귀성 조합으로 공유 확산 유도',
+    },
+  ];
 }

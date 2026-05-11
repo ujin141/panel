@@ -1,33 +1,30 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+const SECRET = process.env.PIN_SESSION_SECRET || 'panel-ai-secret';
+const SESSION_VALUE = `authenticated:${SECRET}`;
+const COOKIE_NAME = 'panel_session';
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  // ⚠️ 반드시 getUser()로 세션 검증 (토큰 검증 포함)
-  const { data: { user } } = await supabase.auth.getUser();
-
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // /dashboard/* 및 /api/* 라우트는 인증 필요
-  const isProtectedPage = pathname.startsWith('/dashboard') ||
+  // 정적 파일 / 공개 경로는 통과
+  const isPublic =
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname.startsWith('/api/auth/pin') ||
+    pathname.startsWith('/api/template-preview') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon');
+
+  if (isPublic) return NextResponse.next();
+
+  // 세션 쿠키 확인
+  const session = request.cookies.get(COOKIE_NAME)?.value;
+  const isAuthenticated = session === SESSION_VALUE;
+
+  // 보호된 페이지/API 경로
+  const isProtectedPage =
+    pathname.startsWith('/dashboard') ||
     pathname.startsWith('/content') ||
     pathname.startsWith('/waitlist') ||
     pathname.startsWith('/schedule') ||
@@ -35,32 +32,32 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/crm') ||
     pathname.startsWith('/dm-funnel') ||
     pathname.startsWith('/card-news') ||
-    pathname.startsWith('/strategy');
+    pathname.startsWith('/strategy') ||
+    pathname === '/';
 
-  const isProtectedApi = pathname.startsWith('/api/') &&
-    !pathname.startsWith('/api/auth'); // auth 엔드포인트 제외
+  const isProtectedApi =
+    pathname.startsWith('/api/') &&
+    !pathname.startsWith('/api/auth');
 
-  // 미인증 유저 → 로그인 페이지로 리다이렉트
-  if (!user && isProtectedPage) {
+  // 미인증 → 로그인 페이지로
+  if (!isAuthenticated && (isProtectedPage || isProtectedApi)) {
+    if (isProtectedApi) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = '/login';  // (auth) 그룹 → 실제 URL은 /login
+    loginUrl.pathname = '/login';
     loginUrl.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 미인증 API 호출 → 401 반환 (미들웨어 레벨 차단)
-  if (!user && isProtectedApi) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // 이미 로그인한 유저가 auth 페이지 접근 시 대시보드로
-  if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/')) {
+  // 이미 인증된 유저가 /login에 접근 시 대시보드로
+  if (isAuthenticated && pathname === '/login') {
     const dashUrl = request.nextUrl.clone();
     dashUrl.pathname = '/dashboard';
     return NextResponse.redirect(dashUrl);
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {

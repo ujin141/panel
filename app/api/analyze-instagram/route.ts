@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 import OpenAI from 'openai';
 
@@ -20,8 +21,8 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const unauth = await requirePinSession();
+    if (unauth) return unauth;
 
     // 1. Apify API 호출 (동기 방식: 완료될 때까지 대기 후 데이터 반환)
     // apify~instagram-scraper 액터 사용
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
         const type = content.includes('?') ? 'curiosity' : content.length > 50 ? 'emotion' : 'scarcity';
 
         await supabase.from('content_posts').insert({
-          user_id: user.id,
+          user_id: OWNER_ID,
           platform: 'instagram',
           type: type,
           content: content.slice(0, 500) + '|||' + postUrl,
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
     const { data: existingMetric } = await supabase
       .from('growth_metrics')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .eq('date', today)
       .single();
 
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('growth_metrics')
         .insert({
-          user_id: user.id,
+          user_id: OWNER_ID,
           date: today,
           views: totalViews,
           dms: totalDms,

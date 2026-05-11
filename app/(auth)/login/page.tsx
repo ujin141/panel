@@ -1,140 +1,244 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Zap, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { createBrowserClient } from '@supabase/ssr';
+import { Zap, Delete } from 'lucide-react';
+import { Suspense } from 'react';
 
-function LoginForm() {
+const KEYS = [
+  ['1', '2', '3'],
+  ['4', '5', '6'],
+  ['7', '8', '9'],
+  ['', '0', 'del'],
+];
+
+const PIN_LENGTH = 4;
+
+function PinLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/dashboard';
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleKey = (key: string) => {
+    if (loading) return;
     setError('');
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (authError) {
-      const msg = authError.message;
-      setError(
-        msg.includes('Invalid login credentials')
-          ? '이메일 또는 비밀번호가 올바르지 않습니다'
-          : msg.includes('Email not confirmed')
-          ? '이메일 인증이 필요합니다. 받은 편지함을 확인하세요.'
-          : msg.includes('Too many requests')
-          ? '잠시 후 다시 시도해주세요.'
-          : '로그인 중 오류가 발생했습니다.'
-      );
-      setLoading(false);
+    if (key === 'del') {
+      setPin(p => p.slice(0, -1));
       return;
     }
+    if (pin.length >= PIN_LENGTH) return;
+    setPin(p => p + key);
+  };
 
-    router.push(redirectTo);
-    router.refresh();
+  // PIN 자동 제출
+  useEffect(() => {
+    if (pin.length === PIN_LENGTH) {
+      submitPin(pin);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin]);
+
+  // 키보드 입력 지원
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (/^[0-9]$/.test(e.key)) handleKey(e.key);
+      if (e.key === 'Backspace') handleKey('del');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin, loading]);
+
+  const submitPin = async (value: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: value }),
+      });
+
+      if (res.ok) {
+        window.location.href = redirectTo;
+      } else {
+        setShake(true);
+        setError('핀 번호가 올바르지 않습니다');
+        setPin('');
+        setTimeout(() => setShake(false), 600);
+      }
+    } catch {
+      setError('오류가 발생했습니다. 다시 시도해주세요.');
+      setPin('');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--bg-primary)',
+      padding: '24px',
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 360,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 40,
+      }}>
+
+        {/* 로고 */}
+        <div style={{ textAlign: 'center' }}>
           <div style={{
-            width: 44, height: 44, background: 'var(--accent-white)',
-            borderRadius: 'var(--radius-md)', display: 'inline-flex',
-            alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+            width: 56, height: 56,
+            background: 'var(--accent-white)',
+            borderRadius: 16,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 16,
+            boxShadow: '0 0 0 1px rgba(255,255,255,0.08)',
           }}>
-            <Zap size={22} color="#000" />
+            <Zap size={26} color="#000" />
           </div>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>PanelAI</div>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>
-            성장 운영 시스템에 오신 것을 환영합니다
+          <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
+            PanelAI
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 6 }}>
+            PIN 번호를 입력하세요
           </div>
         </div>
 
-        {error && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 14px', marginBottom: 16,
-            background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-            borderRadius: 'var(--radius-md)', fontSize: 13, color: '#f87171',
-          }}>
-            <AlertCircle size={14} style={{ flexShrink: 0 }} />
-            {error}
+        {/* PIN 도트 표시 */}
+        <div style={{
+          display: 'flex',
+          gap: 20,
+          animation: shake ? 'pinShake 0.5s ease' : undefined,
+        }}>
+          {Array.from({ length: PIN_LENGTH }).map((_, i) => (
+            <div key={i} style={{
+              width: 18, height: 18,
+              borderRadius: '50%',
+              border: `2px solid ${pin.length > i ? 'var(--accent-white)' : 'var(--border-primary)'}`,
+              background: pin.length > i
+                ? (error ? '#ef4444' : 'var(--accent-white)')
+                : 'transparent',
+              transition: 'all 0.15s ease',
+              transform: pin.length === i + 1 ? 'scale(1.2)' : 'scale(1)',
+            }} />
+          ))}
+        </div>
+
+        {/* 에러 메시지 */}
+        <div style={{
+          height: 20,
+          fontSize: 13,
+          color: '#f87171',
+          textAlign: 'center',
+          opacity: error ? 1 : 0,
+          transition: 'opacity 0.2s',
+          marginTop: -20,
+        }}>
+          {error || ' '}
+        </div>
+
+        {/* 키패드 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+          {KEYS.map((row, ri) => (
+            <div key={ri} style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+              {row.map((key, ki) => {
+                if (key === '') return <div key={ki} style={{ width: 88, height: 72 }} />;
+
+                const isDel = key === 'del';
+                return (
+                  <button
+                    key={ki}
+                    onClick={() => handleKey(key)}
+                    disabled={loading}
+                    style={{
+                      width: 88, height: 72,
+                      borderRadius: 16,
+                      border: '1px solid var(--border-primary)',
+                      background: isDel
+                        ? 'rgba(255,255,255,0.03)'
+                        : 'rgba(255,255,255,0.05)',
+                      color: 'var(--text-primary)',
+                      fontSize: isDel ? 14 : 22,
+                      fontWeight: 600,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.1s ease',
+                      opacity: loading ? 0.5 : 1,
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                    onMouseDown={e => {
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.12)';
+                      (e.currentTarget as HTMLElement).style.transform = 'scale(0.95)';
+                    }}
+                    onMouseUp={e => {
+                      (e.currentTarget as HTMLElement).style.background = isDel
+                        ? 'rgba(255,255,255,0.03)'
+                        : 'rgba(255,255,255,0.05)';
+                      (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLElement).style.background = isDel
+                        ? 'rgba(255,255,255,0.03)'
+                        : 'rgba(255,255,255,0.05)';
+                      (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
+                    }}
+                  >
+                    {isDel ? <Delete size={20} /> : key}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {loading && (
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
+            확인 중...
           </div>
         )}
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">이메일</label>
-            <input
-              id="email" type="email" className="form-input"
-              placeholder="hello@example.com" value={email}
-              onChange={e => setEmail(e.target.value)}
-              required autoComplete="email"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">비밀번호</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="password" type={showPassword ? 'text' : 'password'}
-                className="form-input" placeholder="••••••••" value={password}
-                onChange={e => setPassword(e.target.value)}
-                style={{ paddingRight: 40 }} required autoComplete="current-password"
-              />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', cursor: 'pointer' }}>
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" className="btn btn-primary btn-lg"
-            style={{ width: '100%', marginTop: 8 }} disabled={loading}>
-            {loading ? <div className="spinner" /> : '로그인'}
-          </button>
-        </form>
-
-        <div className="divider" />
-
-        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
-          계정이 없으신가요?{' '}
-          <Link href="/signup" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>회원가입</Link>
-        </p>
-
-        {/* Supabase 이메일 인증 안내 */}
-        <div style={{
-          marginTop: 16, padding: '10px 14px',
-          background: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.15)',
-          borderRadius: 'var(--radius-md)', fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6,
-        }}>
-          💡 회원가입 후 <strong style={{ color: 'var(--text-secondary)' }}>이메일 인증</strong>을 완료해야 로그인이 가능합니다.
-          받은 편지함에서 인증 링크를 확인해주세요.
-        </div>
       </div>
+
+      <style>{`
+        @keyframes pinShake {
+          0%, 100% { transform: translateX(0); }
+          15% { transform: translateX(-8px); }
+          30% { transform: translateX(8px); }
+          45% { transform: translateX(-6px); }
+          60% { transform: translateX(6px); }
+          75% { transform: translateX(-4px); }
+          90% { transform: translateX(4px); }
+        }
+      `}</style>
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="auth-container"><div className="auth-card" /></div>}>
-      <LoginForm />
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="spinner" />
+      </div>
+    }>
+      <PinLoginForm />
     </Suspense>
   );
 }

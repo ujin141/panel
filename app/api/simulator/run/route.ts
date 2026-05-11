@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // 1. Get recent posts
     const { data: posts, error: postsError } = await supabase
       .from('content_posts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .order('created_at', { ascending: false });
 
     if (postsError) throw postsError;
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     const { data: existingMetric } = await supabase
       .from('growth_metrics')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .eq('date', today)
       .single();
 
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
       await supabase
         .from('growth_metrics')
         .insert({
-          user_id: user.id,
+          user_id: OWNER_ID,
           date: today,
           views: newViews,
           dms: newDms,
@@ -85,7 +87,7 @@ export async function POST(request: NextRequest) {
     const { data: thresholds } = await supabase
       .from('alert_thresholds')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .eq('is_active', true);
 
     const checkThresholds = thresholds?.length ? thresholds : [

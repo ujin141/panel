@@ -373,6 +373,11 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
   );
 }
 
+// 실시간 트렌드 허브 타입
+type TrendCardTopic = { rank:number; keyword:string; hook:string; hotScore:number; estimatedViews:string; saves:string; reason:string; hashtags:string[]; source:string; category:string; urgency:string; };
+type TrendAiTopic   = { rank:number; keyword:string; searchVolume:string; competition:string; hotScore:number; reason:string; longtailKeywords:string[]; contentAngle:string; source:string; category:string; };
+type TrendHubData   = { cardTopics: TrendCardTopic[]; aiWritingTopics: TrendAiTopic[]; realtime?: boolean; fetchedCount?: number; fetchedAt?: string; };
+
 // Main Page
 export default function CardNewsPage() {
   const [step,      setStep]      = useState<'setup' | 'editor'>('setup');
@@ -403,6 +408,12 @@ export default function CardNewsPage() {
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string;estimatedViews?:string;viralScore?:number;analysis?:string}>>([]);
   const [recommending, setRecommending] = useState(false);
+
+  // 실시간 트렌드 허브
+  const [trendHub, setTrendHub] = useState<TrendHubData | null>(null);
+  const [trendHubLoading, setTrendHubLoading] = useState(false);
+  const [trendHubTab, setTrendHubTab] = useState<'card' | 'ai'>('card');
+
   const previewRef = useRef<HTMLDivElement>(null);
   const hiddenRenderRef = useRef<HTMLDivElement>(null);
 
@@ -422,6 +433,20 @@ export default function CardNewsPage() {
       alert(e.message);
     } finally {
       setRecommending(false);
+    }
+  };
+
+  const handleTrendHub = async () => {
+    setTrendHubLoading(true);
+    setTrendHub(null);
+    try {
+      const res = await fetch(`/api/trending-topics?category=${category}&mode=all&t=${Date.now()}`);
+      const data = await res.json();
+      setTrendHub(data);
+    } catch (e: any) {
+      console.error('TrendHub error:', e);
+    } finally {
+      setTrendHubLoading(false);
     }
   };
 
@@ -495,7 +520,6 @@ export default function CardNewsPage() {
     setEditSlide(updated);
     setSlides(prev => prev.map(s => s.id === updated.id ? updated : s));
   };
-
   const addSlide = () => {
     const total = slides.length + 1;
     const ns: CardSlide = { id: Date.now().toString(), title: '새 슬라이드', body: '내용을 입력하세요', tag: total + ' / ' + total };
@@ -535,44 +559,30 @@ export default function CardNewsPage() {
     }
   };
 
-  // ── 슬라이드를 1080×1080 캔버스로 캡처 ─────────────────────────────────
+  // ── 슬라이드를 1080×1080 고화질 캔버스로 캡처 (미리보기와 동일 비율) ─────────────────────────
   const captureSlide = async (idx: number): Promise<HTMLCanvasElement> => {
     const h2c = (await import('html2canvas')).default as any;
     const { createRoot } = await import('react-dom/client');
     const React = await import('react');
 
-    // 슬라이드별 이미지 URL
-    const rawUrl = idx === 0
-      ? coverImageUrl
-      : (slideImages[idx] || coverImageUrl);
-
-    // 이미지를 data URL로 변환 (CORS 우회)
+    const rawUrl = idx === 0 ? coverImageUrl : (slideImages[idx] || coverImageUrl);
     let imgDataUrl: string | undefined;
-    if (rawUrl) {
-      imgDataUrl = await toDataUrl(rawUrl);
-    }
+    if (rawUrl) imgDataUrl = await toDataUrl(rawUrl);
 
-    // 숨겨진 컨테이너에 렌더: 내부를 320px로 렌더 후 scale(3.375)으로 1080px처럼 보이게
     const container = hiddenRenderRef.current!;
     container.innerHTML = '';
 
-    // 1080px 외부 래퍼 (캡처 대상)
-    const outerEl = document.createElement('div');
-    outerEl.style.cssText = 'width:1080px;height:1080px;overflow:hidden;position:relative;flex-shrink:0;background:transparent;';
+    // ✔️ 320px 기준 렌더 (미리보기와 동일한 폰트/레이아웃 비율)
+    // html2canvas scale:3.375 → 320 × 3.375 = 1080px 출력
+    const wrapEl = document.createElement('div');
+    wrapEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:320px;height:320px;overflow:hidden;';
+    container.appendChild(wrapEl);
 
-    // 320px 내부 카드 (컴포넌트의 자연 크기)
-    const innerEl = document.createElement('div');
-    innerEl.style.cssText = 'width:320px;height:320px;transform-origin:top left;transform:scale(3.375);';
-
-    outerEl.appendChild(innerEl);
-    container.appendChild(outerEl);
-
-    const root = createRoot(innerEl);
+    const root = createRoot(wrapEl);
     await new Promise<void>((resolve) => {
       root.render(
         React.createElement(
-          React.Fragment,
-          null,
+          React.Fragment, null,
           idx === 0
             ? React.createElement(CoverCard, {
                 slide: slides[idx], theme, brandName: brandName || 'My Brand',
@@ -586,17 +596,19 @@ export default function CardNewsPage() {
               })
         )
       );
-      setTimeout(resolve, 600); // 이미지+폰트 로드 대기
+      setTimeout(resolve, 900); // 이미지+폰트 완전 로드 대기
     });
 
-    const canvas = await h2c(outerEl, {
-      scale: 1,
+    // ✔️ scale:3.375 → 320px × 3.375 = 1080px 완벽 고화질
+    const canvas = await h2c(wrapEl, {
+      scale: 3.375,
       useCORS: true,
       allowTaint: true,
       backgroundColor: null,
       logging: false,
-      width: 1080,
-      height: 1080,
+      width: 320,
+      height: 320,
+      imageTimeout: 15000,
     });
 
     root.unmount();
@@ -659,16 +671,21 @@ export default function CardNewsPage() {
     if (!hiddenRenderRef.current || downloadingVideo || slides.length === 0) return;
     setDownloadingVideo(true);
     try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1080;
-      canvas.height = 1080;
-      const ctx = canvas.getContext('2d');
+      // ── STEP 1: 녹화 전 모든 슬라이드 미리 캡처 ────────────────────────────
+      const capturedCanvases: HTMLCanvasElement[] = [];
+      for (let i = 0; i < slides.length; i++) {
+        const c = await captureSlide(i);
+        capturedCanvases.push(c);
+      }
+
+      // ── STEP 2: 녹화 캔버스 & MediaRecorder 설정 ─────────────────────────
+      const videoCanvas = document.createElement('canvas');
+      videoCanvas.width = 1080;
+      videoCanvas.height = 1080;
+      const ctx = videoCanvas.getContext('2d')!;
       if (!ctx) throw new Error('Canvas context error');
 
-      // 30fps로 스트림 생성
-      const stream = canvas.captureStream(30);
-      
-      // 지원되는 포맷 확인 (최우선: mp4, 차선: webm)
+      // 지원 포맷 확인 (MP4 우선)
       let mimeType = 'video/webm;codecs=vp9';
       if (MediaRecorder.isTypeSupported('video/mp4')) {
         mimeType = 'video/mp4';
@@ -676,12 +693,13 @@ export default function CardNewsPage() {
         mimeType = 'video/webm;codecs=h264';
       }
 
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const stream = videoCanvas.captureStream(30);
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 12_000_000, // 12Mbps — keyframe 생성 용이
+      });
       const chunks: BlobPart[] = [];
-      
-      recorder.ondataavailable = e => {
-        if (e.data && e.data.size > 0) chunks.push(e.data);
-      };
+      recorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data); };
 
       const recordPromise = new Promise<void>((resolve) => {
         recorder.onstop = () => {
@@ -697,22 +715,41 @@ export default function CardNewsPage() {
         };
       });
 
-      recorder.start();
+      // ── STEP 3: 첫 슬라이드 그린 후 녹화 시작 ───────────────────────────
+      const drawSlide = (sc: HTMLCanvasElement) => {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 1080, 1080);
+        ctx.drawImage(sc, 0, 0, sc.width, sc.height, 0, 0, 1080, 1080);
+      };
 
-      // 각 슬라이드를 캔버스에 렌더링하고 일정 시간(2.5초) 유지
-      for (let i = 0; i < slides.length; i++) {
-        const slideCanvas = await captureSlide(i);
-        ctx.drawImage(slideCanvas, 0, 0, 1080, 1080);
-        // 2.5초 대기 (슬라이드당 재생 시간)
-        await new Promise(r => setTimeout(r, 2500));
+      // 첫 슬라이드 미리 그리기 (recorder 시작 전)
+      drawSlide(capturedCanvases[0]);
+      await new Promise(r => setTimeout(r, 100)); // 첫 프레임 안정화
+
+      recorder.start(); // 청크 간격 없이 시작 (onstop 시 한번에 flush)
+
+      // ── STEP 4: 슬라이드당 표시 → 검은전환 → 다음 슬라이드 ─────────────
+      const SLIDE_MS  = 2800; // 슬라이드 표시 시간
+      const TRANS_MS  = 200;  // 전환 검은 프레임 (keyframe 강제 생성)
+
+      for (let i = 0; i < capturedCanvases.length; i++) {
+        drawSlide(capturedCanvases[i]);
+        await new Promise(r => setTimeout(r, SLIDE_MS));
+
+        // 슬라이드 전환 시 검은 프레임 + 데이터 플러시 → keyframe 강제 생성
+        if (i < capturedCanvases.length - 1) {
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, 1080, 1080);
+          recorder.requestData(); // 현재까지 데이터 즉시 flush
+          await new Promise(r => setTimeout(r, TRANS_MS));
+        }
       }
 
-      // 마지막 프레임이 제대로 녹화되도록 약간 추가 대기
-      await new Promise(r => setTimeout(r, 500));
-      
+      // 마지막 프레임 여유 후 종료
+      await new Promise(r => setTimeout(r, 300));
       recorder.stop();
       await recordPromise;
-      
+
     } catch (err) {
       console.error('Video download failed:', err);
       alert('비디오 변환에 실패했습니다.');
@@ -759,6 +796,231 @@ export default function CardNewsPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* === 실시간 트렌드 허브 === */}
+            <div className="cn-step" style={{ border: '1px solid rgba(250,204,21,0.25)', background: 'linear-gradient(135deg, rgba(250,204,21,0.04) 0%, rgba(251,146,60,0.04) 100%)' }}>
+              <div className="cn-step-header">
+                <div className="cn-step-num" style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', boxShadow: '0 2px 10px rgba(245,158,11,0.4)' }}>⚡</div>
+                <div className="cn-step-title" style={{ color: '#fcd34d' }}>실시간 트렌드 허브 <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginLeft: 4 }}>— 지금 트래픽 폭발 주제 자동 탐색</span></div>
+              </div>
+              <div className="cn-step-body">
+
+                {/* 허브 실행 버튼 */}
+                <button
+                  onClick={handleTrendHub}
+                  disabled={trendHubLoading}
+                  style={{
+                    width: '100%', padding: '14px 20px',
+                    background: trendHubLoading ? 'rgba(245,158,11,0.15)' : 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+                    border: 'none', borderRadius: 12, cursor: trendHubLoading ? 'not-allowed' : 'pointer',
+                    color: '#fff', fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    boxShadow: trendHubLoading ? 'none' : '0 4px 20px rgba(245,158,11,0.35)',
+                    transition: 'all 0.2s', marginBottom: trendHub ? 16 : 0,
+                  }}
+                  onMouseEnter={e => { if (!trendHubLoading) e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {trendHubLoading ? (
+                    <><div className="spinner" />구글 뉴스·트렌드 실시간 수집 중...</>
+                  ) : (
+                    <>⚡ 지금 트래픽 폭발 주제 탐색하기</>
+                  )}
+                </button>
+
+                {/* 트렌드 허브 결과 */}
+                {trendHub && (
+                  <div>
+                    {/* 수집 상태 배지 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 5,
+                        fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
+                        background: trendHub.realtime ? 'rgba(16,185,129,0.15)' : 'rgba(100,100,100,0.15)',
+                        border: `1px solid ${trendHub.realtime ? 'rgba(16,185,129,0.4)' : 'rgba(100,100,100,0.3)'}`,
+                        borderRadius: 20, padding: '4px 10px',
+                        color: trendHub.realtime ? '#6ee7b7' : '#9ca3af',
+                      }}>
+                        {trendHub.realtime ? '🟢' : '🔵'}
+                        {trendHub.realtime ? `실시간 ${trendHub.fetchedCount}건 수집 완료` : 'AI 자체 분석 모드'}
+                      </div>
+                      {trendHub.fetchedAt && (
+                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+                          {new Date(trendHub.fetchedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} 기준
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 탭 전환 */}
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                      <button
+                        onClick={() => setTrendHubTab('card')}
+                        style={{
+                          flex: 1, padding: '9px 0', fontSize: 13, fontWeight: 700, borderRadius: 8,
+                          border: trendHubTab === 'card' ? '1.5px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                          background: trendHubTab === 'card' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.03)',
+                          color: trendHubTab === 'card' ? '#fcd34d' : 'rgba(255,255,255,0.5)',
+                          cursor: 'pointer', transition: 'all 0.2s',
+                        }}
+                      >
+                        📸 카드뉴스 주제 ({trendHub.cardTopics?.length ?? 0})
+                      </button>
+                      <button
+                        onClick={() => setTrendHubTab('ai')}
+                        style={{
+                          flex: 1, padding: '9px 0', fontSize: 13, fontWeight: 700, borderRadius: 8,
+                          border: trendHubTab === 'ai' ? '1.5px solid #818cf8' : '1px solid rgba(255,255,255,0.1)',
+                          background: trendHubTab === 'ai' ? 'rgba(129,140,248,0.15)' : 'rgba(255,255,255,0.03)',
+                          color: trendHubTab === 'ai' ? '#a5b4fc' : 'rgba(255,255,255,0.5)',
+                          cursor: 'pointer', transition: 'all 0.2s',
+                        }}
+                      >
+                        ✍️ AI 글쓰기 주제 ({trendHub.aiWritingTopics?.length ?? 0})
+                      </button>
+                    </div>
+
+                    {/* 카드뉴스 주제 탭 */}
+                    {trendHubTab === 'card' && trendHub.cardTopics && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {trendHub.cardTopics.map((item, i) => (
+                          <div
+                            key={i}
+                            onClick={() => setTopic(item.keyword)}
+                            style={{
+                              background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(245,158,11,0.15)',
+                              borderRadius: 12, padding: '14px 16px', cursor: 'pointer',
+                              transition: 'all 0.2s', position: 'relative', overflow: 'hidden',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#f59e0b'; e.currentTarget.style.background = 'rgba(245,158,11,0.08)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.15)'; e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; }}
+                          >
+                            {/* 랭크 + 긴박도 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                              <div style={{
+                                width: 24, height: 24, borderRadius: '50%',
+                                background: i === 0 ? 'linear-gradient(135deg,#f59e0b,#ef4444)' : i === 1 ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 11, fontWeight: 900, color: '#fff', flexShrink: 0,
+                              }}>{item.rank}</div>
+                              <div style={{
+                                fontSize: 10, fontWeight: 700, letterSpacing: '0.05em',
+                                padding: '2px 8px', borderRadius: 20,
+                                background: item.urgency === '즉시' ? 'rgba(239,68,68,0.2)' : item.urgency === '이번주' ? 'rgba(245,158,11,0.2)' : 'rgba(100,100,100,0.2)',
+                                color: item.urgency === '즉시' ? '#fca5a5' : item.urgency === '이번주' ? '#fcd34d' : '#9ca3af',
+                                border: item.urgency === '즉시' ? '1px solid rgba(239,68,68,0.4)' : item.urgency === '이번주' ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(100,100,100,0.3)',
+                              }}
+                              >{item.urgency === '즉시' ? '🔥 즉시 업로드' : item.urgency === '이번주' ? '⚡ 이번주' : '📅 이번달'}</div>
+                              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <div style={{ fontSize: 10, color: '#fbbf24', fontWeight: 800 }}>HOT {item.hotScore}</div>
+                              </div>
+                            </div>
+
+                            {/* 키워드 제목 */}
+                            <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 6, lineHeight: 1.4, wordBreak: 'keep-all' }}>
+                              {item.keyword}
+                            </div>
+
+                            {/* 후킹 문구 */}
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#fcd34d', marginBottom: 8, background: 'rgba(245,158,11,0.1)', padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
+                              💬 슬라이드 후킹: "{item.hook}"
+                            </div>
+
+                            {/* 예상 조회수 + 이유 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                              <div style={{ fontSize: 11, background: 'rgba(59,130,246,0.15)', color: '#93c5fd', padding: '3px 8px', borderRadius: 4, fontWeight: 700, border: '1px solid rgba(59,130,246,0.3)' }}>
+                                👁 예상 {item.estimatedViews}
+                              </div>
+                              <div style={{ fontSize: 11, background: item.saves === '높음' ? 'rgba(16,185,129,0.15)' : 'rgba(100,100,100,0.15)', color: item.saves === '높음' ? '#6ee7b7' : '#9ca3af', padding: '3px 8px', borderRadius: 4, fontWeight: 700, border: `1px solid ${item.saves === '높음' ? 'rgba(16,185,129,0.3)' : 'rgba(100,100,100,0.3)'}` }}>
+                                💾 저장율 {item.saves}
+                              </div>
+                              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4 }}>{item.source}</div>
+                            </div>
+
+                            <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, marginBottom: 8 }}>💡 {item.reason}</div>
+
+                            {/* 해시태그 */}
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              {item.hashtags?.map((tag, ti) => (
+                                <span key={ti} style={{ fontSize: 10, color: '#818cf8', background: 'rgba(129,140,248,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(129,140,248,0.2)', fontWeight: 600 }}>{tag}</span>
+                              ))}
+                            </div>
+
+                            {/* 클릭 힌트 */}
+                            <div style={{ position: 'absolute', bottom: 10, right: 12, fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>탭하면 주제로 선택 →</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* AI 글쓰기 주제 탭 */}
+                    {trendHubTab === 'ai' && trendHub.aiWritingTopics && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {trendHub.aiWritingTopics.map((item, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(129,140,248,0.15)',
+                              borderRadius: 12, padding: '14px 16px',
+                              transition: 'all 0.2s', position: 'relative',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#818cf8'; e.currentTarget.style.background = 'rgba(129,140,248,0.06)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(129,140,248,0.15)'; e.currentTarget.style.background = 'rgba(0,0,0,0.35)'; }}
+                          >
+                            {/* 랭크 + 경쟁도 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                              <div style={{
+                                width: 24, height: 24, borderRadius: '50%',
+                                background: i === 0 ? 'linear-gradient(135deg,#818cf8,#6366f1)' : i === 1 ? 'linear-gradient(135deg,#a78bfa,#8b5cf6)' : 'rgba(255,255,255,0.1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 11, fontWeight: 900, color: '#fff', flexShrink: 0,
+                              }}>{item.rank}</div>
+                              <div style={{
+                                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                                background: item.competition === '낮음' ? 'rgba(16,185,129,0.15)' : item.competition === '보통' ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
+                                color: item.competition === '낮음' ? '#6ee7b7' : item.competition === '보통' ? '#fcd34d' : '#fca5a5',
+                                border: `1px solid ${item.competition === '낮음' ? 'rgba(16,185,129,0.3)' : item.competition === '보통' ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                              }}>경쟁도 {item.competition}</div>
+                              <div style={{ marginLeft: 'auto', fontSize: 10, color: '#a5b4fc', fontWeight: 800 }}>HOT {item.hotScore}</div>
+                            </div>
+
+                            {/* 키워드 */}
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#e0e7ff', marginBottom: 8, lineHeight: 1.4, wordBreak: 'keep-all' }}>
+                              {item.keyword}
+                            </div>
+
+                            {/* 검색량 + 출처 */}
+                            <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                              <div style={{ fontSize: 11, background: 'rgba(129,140,248,0.15)', color: '#a5b4fc', padding: '3px 8px', borderRadius: 4, fontWeight: 700, border: '1px solid rgba(129,140,248,0.3)' }}>
+                                🔍 월 검색량 {item.searchVolume}
+                              </div>
+                              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4 }}>{item.source}</div>
+                            </div>
+
+                            {/* 글쓰기 각도 */}
+                            <div style={{ fontSize: 12, color: '#a5b4fc', background: 'rgba(129,140,248,0.08)', padding: '8px 12px', borderRadius: 8, marginBottom: 8, lineHeight: 1.5, border: '1px solid rgba(129,140,248,0.15)' }}>
+                              <strong style={{ color: '#c7d2fe' }}>✍️ 글쓰기 각도:</strong> {item.contentAngle}
+                            </div>
+
+                            {/* 이유 */}
+                            <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.5, marginBottom: 8 }}>💡 {item.reason}</div>
+
+                            {/* 롱테일 키워드 */}
+                            {item.longtailKeywords && (
+                              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>롱테일:</span>
+                                {item.longtailKeywords.map((kw, ki) => (
+                                  <span key={ki} style={{ fontSize: 10, color: '#818cf8', background: 'rgba(129,140,248,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(129,140,248,0.2)', fontWeight: 600 }}>{kw}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

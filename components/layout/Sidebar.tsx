@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Sparkles, MessageCircle, Users,
   Filter, Lightbulb, BookOpen, CalendarClock,
-  TrendingUp, Bell, UserSquare2, Zap, LayoutGrid, Video
+  TrendingUp, Bell, UserSquare2, Zap, LayoutGrid, Video, UserPlus, Scissors, LogOut
 } from 'lucide-react';
 
 const navGroups = [
@@ -22,6 +22,8 @@ const navGroups = [
       { label: 'AI 글쓰기', href: '/content', icon: Sparkles },
       { label: '카드뉴스 제작', href: '/card-news', icon: LayoutGrid },
       { label: '숏폼 영상 제작', href: '/short-form', icon: Video },
+      { label: '비트 싱크 편집', href: '/beat-editor', icon: Scissors },
+      { label: '팔로워 폭발 전략', href: '/follow-growth', icon: UserPlus },
       { label: '예약 발행', href: '/schedule', icon: CalendarClock },
     ],
   },
@@ -113,6 +115,28 @@ export default function Sidebar() {
         <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 999, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: '84.7%', background: '#fff', borderRadius: 999 }} />
         </div>
+
+        {/* 로그아웃 */}
+        <button
+          onClick={async () => {
+            await fetch('/api/auth/pin', { method: 'DELETE' });
+            window.location.href = '/login';
+          }}
+          style={{
+            marginTop: 12, width: '100%',
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '8px 10px', borderRadius: 8,
+            background: 'transparent', border: 'none',
+            cursor: 'pointer', color: 'rgba(255,255,255,0.25)',
+            fontSize: 12, fontWeight: 500,
+            transition: 'color 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.25)')}
+        >
+          <LogOut size={13} />
+          잠금
+        </button>
       </div>
     </aside>
   );

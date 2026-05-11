@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function GET(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     // 1. 데이터 수집 (최근 게시물, 메트릭, 알림)
     const { data: posts } = await supabase
       .from('content_posts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .order('created_at', { ascending: false })
       .limit(20);
 
     const { data: metrics } = await supabase
       .from('growth_metrics')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .order('date', { ascending: false })
       .limit(7);
 

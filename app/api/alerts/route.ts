@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 
 // 안전한 에러 로깅 — DB 내부 정보 노출 방지
@@ -12,16 +13,17 @@ function safeLog(label: string, error: unknown) {
   });
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { data, error } = await supabase
       .from('growth_alerts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -33,10 +35,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id, status } = await request.json();
 
@@ -52,7 +55,7 @@ export async function PATCH(request: NextRequest) {
       .from('growth_alerts')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)  // ✅ 소유권 검증
+      .eq('user_id', OWNER_ID)
       .select()
       .single();
 

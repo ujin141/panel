@@ -388,27 +388,40 @@ export default function ShortFormPage() {
               <div style={{
                 position: 'absolute', top: '35%', left: 0, right: 0,
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                padding: '0 20px', textAlign: 'center', zIndex: 3, pointerEvents: 'none'
+                padding: '0 16px', textAlign: 'center', zIndex: 3, pointerEvents: 'none'
               }}>
-                {script[activeSubtitleIdx] && (
-                  <h1 
-                    key={script[activeSubtitleIdx].id + activeSubtitleIdx}
-                    style={{
-                      fontFamily: "'Black Han Sans', sans-serif",
-                      fontSize: script[activeSubtitleIdx].type === 'hook' ? 38 : 34,
-                      fontWeight: 400, // Black Han Sans는 기본이 매우 두꺼움
-                      color: script[activeSubtitleIdx].type === 'hook' ? '#ffeb3b' : '#ffffff', // 훅은 노란색
-                      WebkitTextStroke: '2px #000', // 확실한 검은색 외곽선
-                      textShadow: '0 4px 15px rgba(0,0,0,0.9), 0 2px 5px rgba(0,0,0,0.8)',
-                      lineHeight: 1.25,
-                      wordBreak: 'keep-all',
-                      background: script[activeSubtitleIdx].type === 'hook' ? 'linear-gradient(transparent 60%, rgba(239,68,68,0.8) 60%)' : 
-                                  script[activeSubtitleIdx].type === 'solution' ? 'linear-gradient(transparent 60%, rgba(34,197,94,0.8) 60%)' : 'none',
-                      animation: 'subtitlePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
-                    }}>
-                    {script[activeSubtitleIdx].text}
-                  </h1>
-                )}
+                {script[activeSubtitleIdx] && (() => {
+                  const item = script[activeSubtitleIdx];
+                  // 320px 컨테이너 기준 비례 폰트 (실제 릴스 1080px 비율 동일 유지)
+                  // hook: 실제 90px/1080px ≈ 8.3% → 320×8.3% ≈ 26.5px
+                  // 나머지: 실제 72px/1080px ≈ 6.7% → 320×6.7% ≈ 21.5px
+                  const fontSize = item.type === 'hook' ? 26 : item.type === 'cta' ? 20 : 22;
+                  const strokeWidth = item.type === 'hook' ? '1.5px' : '1px';
+                  return (
+                    <h1
+                      key={item.id + activeSubtitleIdx}
+                      style={{
+                        fontFamily: "'Black Han Sans', sans-serif",
+                        fontSize,
+                        fontWeight: 400,
+                        color: item.type === 'hook' ? '#ffeb3b' : '#ffffff',
+                        WebkitTextStroke: `${strokeWidth} #000`,
+                        textShadow: '0 3px 10px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8)',
+                        lineHeight: 1.3,
+                        wordBreak: 'keep-all',
+                        margin: 0,
+                        background: item.type === 'hook'
+                          ? 'linear-gradient(transparent 58%, rgba(239,68,68,0.85) 58%)'
+                          : item.type === 'solution'
+                          ? 'linear-gradient(transparent 58%, rgba(34,197,94,0.85) 58%)'
+                          : 'none',
+                        animation: 'subtitlePop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+                      }}
+                    >
+                      {item.text}
+                    </h1>
+                  );
+                })()}
               </div>
 
               {/* 우측 리얼 UI 액션 바 */}

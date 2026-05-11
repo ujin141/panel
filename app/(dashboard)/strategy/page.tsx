@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Header from '@/components/layout/Header';
-import { Lightbulb, Sparkles, ChevronRight, Target, FileText, Funnel } from 'lucide-react';
+import { Sparkles, ChevronRight, Target } from 'lucide-react';
 
 const APP_CATEGORIES = [
   '뷰티/스킨케어', '패션/스타일', '건강/피트니스', '라이프스타일',
@@ -82,13 +82,29 @@ export default function StrategyPage() {
   const [result, setResult] = useState<Strategy | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [isFallback, setIsFallback] = useState(false);
+
   const handleGenerate = async () => {
     if (!category) return;
     setLoading(true);
     setResult(null);
-    await new Promise(r => setTimeout(r, 2000));
-    setResult(mockStrategy);
-    setLoading(false);
+    setIsFallback(false);
+    try {
+      const res = await fetch('/api/strategy/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, target: finalTarget || '20~30대 한국 여성' }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setResult(data.strategy);
+      setIsFallback(!!data.fallback);
+    } catch {
+      setResult(mockStrategy);
+      setIsFallback(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const finalTarget = target === 'custom' ? customTarget : target;
@@ -156,11 +172,20 @@ export default function StrategyPage() {
         {/* Result */}
         {result && (
           <div className="strategy-result animate-fade-in">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
               <div className="result-badge">
                 <Target size={14} />
                 {category} · {finalTarget || '일반 타겟'}
               </div>
+              {isFallback ? (
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'rgba(245,158,11,0.12)', color: '#fcd34d', border: '1px solid rgba(245,158,11,0.3)' }}>
+                  ⚡ 기본 전략 (OpenAI 크레딧 부족 시 표시)
+                </span>
+              ) : (
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: 'rgba(16,185,129,0.12)', color: '#6ee7b7', border: '1px solid rgba(16,185,129,0.3)' }}>
+                  ✦ AI 맞춤 생성
+                </span>
+              )}
             </div>
 
             {/* Phases */}

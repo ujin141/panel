@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('growth_metrics')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .gte('date', since.toISOString().split('T')[0])
       .order('date', { ascending: true });
 
@@ -30,18 +31,17 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const body = await request.json();
 
     const { data, error } = await supabase
       .from('growth_metrics')
       .upsert({
-        user_id: user.id,
+        user_id: OWNER_ID,
         date: body.date || new Date().toISOString().split('T')[0],
         views: body.views || 0,
         dms: body.dms || 0,

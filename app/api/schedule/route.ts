@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
     let query = supabase
       .from('scheduled_posts')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .order('scheduled_at', { ascending: true });
 
     if (status) query = query.eq('status', status);
@@ -27,17 +28,17 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const body = await request.json();
 
     const { data, error } = await supabase
       .from('scheduled_posts')
       .insert([{
-        user_id: user.id,
+        user_id: OWNER_ID,
         platform: body.platform,
         content: body.content,
         content_type: body.content_type || 'curiosity',
@@ -55,18 +56,18 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const { id, ...updates } = await request.json();
 
     const { data, error } = await supabase
       .from('scheduled_posts')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id)
+      .eq('user_id', OWNER_ID)
       .select()
       .single();
 
@@ -78,13 +79,17 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const unauth = await requirePinSession();
+  if (unauth) return unauth;
+
   try {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
     const { id } = await request.json();
-    const { error } = await supabase.from('scheduled_posts').delete().eq('id', id).eq('user_id', user.id);
+    const { error } = await supabase
+      .from('scheduled_posts')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', OWNER_ID);
 
     if (error) throw error;
     return NextResponse.json({ success: true });

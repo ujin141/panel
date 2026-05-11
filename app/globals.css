@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;700;900&family=Oswald:wght@400;600;700&family=Bebas+Neue&family=Roboto:wght@400;700;900&display=swap');
 
 /* ─────────────────────────────────────────
    Design Tokens
@@ -452,6 +453,11 @@ input, textarea, select {
 
 .animate-slide-left {
   animation: slideInLeft var(--transition-slow) ease both;
+}
+
+@keyframes fadeInSub {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* ─────────────────────────────────────────

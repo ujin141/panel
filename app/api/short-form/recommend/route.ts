@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requirePinSession, OWNER_ID } from '@/lib/pinAuth';
 import { createClient } from '@/lib/supabase/server';
 import { openai } from '@/lib/openai';
 
@@ -8,17 +9,15 @@ export async function POST(req: NextRequest) {
   try {
     const { brandName, category, type = 'custom' } = await req.json();
     
-    // 1. Supabase에서 사용자의 최근 성과 게시물 가져오기
+    // 1. 최근 성과 게시물 가져오기
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
     let accountContext = '';
-    
-    if (user) {
+    const unauth = await requirePinSession();
+    if (!unauth) {
       const { data: posts } = await supabase
         .from('content_posts')
         .select('content, views, dms')
-        .eq('user_id', user.id)
+        .eq('user_id', OWNER_ID)
         .order('views', { ascending: false })
         .limit(5);
         
