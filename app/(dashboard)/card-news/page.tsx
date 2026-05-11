@@ -132,7 +132,7 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
 
   return (
     <div style={{
-      width: '100%', aspectRatio: '1 / 1', borderRadius: 16,
+      width: '100%', aspectRatio: '9 / 16', borderRadius: 16,
       position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
       padding: 0, boxSizing: 'border-box',
@@ -177,15 +177,15 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl }: {
       </div>
 
       {/* 하단 제목 영역 */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 26px 26px', zIndex: 3 }}>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '40px 24px 48px', zIndex: 3 }}>
         {t.accentDot && !coverImageUrl && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: t.accentDot }} />
             <div style={{ width: 30, height: 2, background: t.accentDot, borderRadius: 1 }} />
           </div>
         )}
         <div style={{
-          fontSize: 32, fontWeight: 900, lineHeight: 1.3, whiteSpace: 'pre-line',
+          fontSize: 28, fontWeight: 900, lineHeight: 1.35, whiteSpace: 'pre-line',
           letterSpacing: '-0.03em',
           color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
           textShadow: coverImageUrl ? '0 2px 16px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5)' : 'none',
@@ -220,12 +220,12 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
 
   return (
     <div style={{
-      width: '100%', aspectRatio: '1 / 1', borderRadius: 16,
+      width: '100%', aspectRatio: '9 / 16', borderRadius: 16,
       position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
       justifyContent: isCenter ? 'center' : 'space-between',
       alignItems: isCenter ? 'center' : 'flex-start',
-      padding: 26, boxSizing: 'border-box',
+      padding: '36px 24px', boxSizing: 'border-box',
       textAlign: isCenter ? 'center' : 'left',
       background: coverImageUrl ? `url(${coverImageUrl}) center/cover no-repeat` : t.bg,
     }}>
@@ -295,9 +295,9 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
         )}
 
         {/* ── 슬라이드 제목: 포인트 강조 ── */}
-        <div style={{ marginBottom: slide.body ? 14 : 0 }}>
+        <div style={{ marginBottom: slide.body ? 20 : 0 }}>
           <div style={{
-            fontSize: 24, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
+            fontSize: 22, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
             lineHeight: 1.3, whiteSpace: 'pre-line',
             letterSpacing: '-0.02em',
             textShadow: coverImageUrl ? '0 2px 14px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.4)' : 'none',
@@ -320,7 +320,7 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
         {/* ── 본문: 읽기 쉬운 구조 ── */}
         {slide.body && (
           <div style={{
-            display: 'flex', flexDirection: 'column', gap: 7,
+            display: 'flex', flexDirection: 'column', gap: 12,
           }}>
             {slide.body.split('\n').map((line, li) => {
               const trimmed = line.trim();
@@ -332,13 +332,13 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
               const isDivider = trimmed === '---' || trimmed === '──';
 
               if (isDivider) return (
-                <div key={li} style={{ height: 1, background: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), margin: '2px 0' }} />
+                <div key={li} style={{ height: 1, background: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'), margin: '4px 0' }} />
               );
 
               return (
                 <div key={li} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 7,
-                  fontSize: isListItem ? 13.5 : 13,
+                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 8,
+                  fontSize: isListItem ? 13 : 12.5,
                   fontWeight: isListItem ? 700 : 500,
                   lineHeight: 1.6,
                   color: coverImageUrl
@@ -574,10 +574,9 @@ export default function CardNewsPage() {
     const container = hiddenRenderRef.current!;
     container.innerHTML = '';
 
-    // ✔️ 320px 기준 렌더 (미리보기와 동일한 폰트/레이아웃 비율)
-    // html2canvas scale:3.375 → 320 × 3.375 = 1080px 출력
+    // 1080x1920 출력을 위해 270x480 (9:16) 렌더링 후 scale 4배 적용
     const wrapEl = document.createElement('div');
-    wrapEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:320px;height:320px;overflow:hidden;';
+    wrapEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:270px;height:480px;overflow:hidden;';
     container.appendChild(wrapEl);
 
     const root = createRoot(wrapEl);
@@ -601,15 +600,15 @@ export default function CardNewsPage() {
       setTimeout(resolve, 900); // 이미지+폰트 완전 로드 대기
     });
 
-    // ✔️ scale:3.375 → 320px × 3.375 = 1080px 완벽 고화질
+    // 1080x1920 출력을 위한 스케일
     const canvas = await h2c(wrapEl, {
-      scale: 3.375,
+      scale: 4,
       useCORS: true,
       allowTaint: true,
       backgroundColor: null,
       logging: false,
-      width: 320,
-      height: 320,
+      width: 270,
+      height: 480,
       imageTimeout: 15000,
     });
 
@@ -683,7 +682,7 @@ export default function CardNewsPage() {
       // ── STEP 2: 녹화 캔버스 & MediaRecorder 설정 ─────────────────────────
       const videoCanvas = document.createElement('canvas');
       videoCanvas.width = 1080;
-      videoCanvas.height = 1080;
+      videoCanvas.height = 1920; // 릴스/쇼츠 사이즈 (9:16 비율)
       const ctx = videoCanvas.getContext('2d')!;
       if (!ctx) throw new Error('Canvas context error');
 
@@ -726,28 +725,34 @@ export default function CardNewsPage() {
         
         const pamCanvas = document.createElement('canvas');
         pamCanvas.width = 1080;
-        pamCanvas.height = 1080;
+        pamCanvas.height = 1920;
         const pCtx = pamCanvas.getContext('2d')!;
         
         pCtx.fillStyle = '#000';
-        pCtx.fillRect(0, 0, 1080, 1080);
+        pCtx.fillRect(0, 0, 1080, 1920);
         
-        const scale = Math.min(1080 / pamphletImg.width, 1080 / pamphletImg.height);
+        const scale = Math.min(1080 / pamphletImg.width, 1920 / pamphletImg.height);
         const w = pamphletImg.width * scale;
         const h = pamphletImg.height * scale;
         const x = (1080 - w) / 2;
-        const y = (1080 - h) / 2;
+        const y = (1920 - h) / 2;
         pCtx.drawImage(pamphletImg, x, y, w, h);
         
         capturedCanvases.push(pamCanvas);
       }
 
       // ── STEP 3: 디졸브 전환 효과 준비 ───────────────────────────
+      const drawSingleSlide = (sc: HTMLCanvasElement, alpha: number = 1) => {
+        ctx.globalAlpha = alpha;
+        // 슬라이드가 이미 1080x1920 이므로 화면에 꽉 차게 그리기
+        ctx.drawImage(sc, 0, 0, 1080, 1920);
+      };
+
       const drawSlide = (sc: HTMLCanvasElement) => {
         ctx.globalAlpha = 1;
         ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, 1080, 1080);
-        ctx.drawImage(sc, 0, 0, sc.width, sc.height, 0, 0, 1080, 1080);
+        ctx.fillRect(0, 0, 1080, 1920);
+        drawSingleSlide(sc, 1);
       };
 
       const crossfade = async (sc1: HTMLCanvasElement, sc2: HTMLCanvasElement, durationMs: number) => {
@@ -759,13 +764,10 @@ export default function CardNewsPage() {
           const alpha = i / frames;
           ctx.globalAlpha = 1;
           ctx.fillStyle = '#000';
-          ctx.fillRect(0, 0, 1080, 1080);
+          ctx.fillRect(0, 0, 1080, 1920);
           
-          ctx.globalAlpha = 1 - alpha;
-          ctx.drawImage(sc1, 0, 0, sc1.width, sc1.height, 0, 0, 1080, 1080);
-          
-          ctx.globalAlpha = alpha;
-          ctx.drawImage(sc2, 0, 0, sc2.width, sc2.height, 0, 0, 1080, 1080);
+          drawSingleSlide(sc1, 1 - alpha);
+          drawSingleSlide(sc2, alpha);
           
           if (i % 15 === 0) recorder.requestData();
           await new Promise(r => setTimeout(r, intervalMs));
