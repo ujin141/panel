@@ -694,10 +694,11 @@ export default function CardNewsPage() {
         mimeType = 'video/webm;codecs=h264';
       }
 
-      const stream = videoCanvas.captureStream(60);
+      // 모바일(릴스/쇼츠) 재인코딩 시 버벅임 방지를 위해 30fps 및 8Mbps 로 안정화
+      const stream = videoCanvas.captureStream(30);
       const recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 25_000_000, // 25Mbps — 최고 화질
+        videoBitsPerSecond: 8_000_000, // 8Mbps — 버벅임 없는 최적화 화질
       });
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data); };
@@ -751,7 +752,7 @@ export default function CardNewsPage() {
       };
 
       const crossfade = async (sc1: HTMLCanvasElement, sc2: HTMLCanvasElement, durationMs: number) => {
-        const fps = 60;
+        const fps = 30; // JS 스레드 부하 최소화를 위해 30fps 유지
         const frames = Math.floor((durationMs / 1000) * fps);
         const intervalMs = 1000 / fps;
         
@@ -767,13 +768,13 @@ export default function CardNewsPage() {
           ctx.globalAlpha = alpha;
           ctx.drawImage(sc2, 0, 0, sc2.width, sc2.height, 0, 0, 1080, 1080);
           
-          if (i % 10 === 0) recorder.requestData();
+          if (i % 15 === 0) recorder.requestData();
           await new Promise(r => setTimeout(r, intervalMs));
         }
         ctx.globalAlpha = 1;
       };
 
-      // ── STEP 4: 녹화 시작 및 재생 (60fps) ─────────────────────────────
+      // ── STEP 4: 녹화 시작 및 재생 (안정성 최적화) ─────────────────────────────
       drawSlide(capturedCanvases[0]);
       await new Promise(r => setTimeout(r, 100));
 
@@ -781,18 +782,24 @@ export default function CardNewsPage() {
 
       const SLIDE_MS = 2500;
       const FADE_MS  = 600; 
+      const PAMPHLET_MS = 5000; // 팜플렛 노출 시간 (5초)
 
       for (let i = 0; i < capturedCanvases.length; i++) {
         if (i > 0) drawSlide(capturedCanvases[i]);
-        await new Promise(r => setTimeout(r, SLIDE_MS));
+        
+        // 마지막 슬라이드(업로드한 팜플렛 등)는 더 길게 보여줌
+        const isLastSlide = i === capturedCanvases.length - 1;
+        await new Promise(r => setTimeout(r, isLastSlide ? PAMPHLET_MS : SLIDE_MS));
 
-        if (i < capturedCanvases.length - 1) {
+        if (!isLastSlide) {
           await crossfade(capturedCanvases[i], capturedCanvases[i + 1], FADE_MS);
+        } else {
+          // 마지막 프레임이 확실히 영상에 담기도록 데이터 강제 요청 후 대기
+          recorder.requestData();
+          await new Promise(r => setTimeout(r, 800));
         }
       }
 
-      // 마지막 프레임 여유 후 종료
-      await new Promise(r => setTimeout(r, 300));
       recorder.stop();
       await recordPromise;
 
