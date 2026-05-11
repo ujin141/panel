@@ -773,6 +773,17 @@ export default function CardNewsPage() {
         ctx.globalAlpha = 1;
       };
 
+      const holdSlide = async (sc: HTMLCanvasElement, durationMs: number) => {
+        const fps = 30;
+        const frames = Math.floor((durationMs / 1000) * fps);
+        const intervalMs = 1000 / fps;
+        for (let i = 0; i < frames; i++) {
+          drawSlide(sc);
+          if (i % 15 === 0) recorder.requestData();
+          await new Promise(r => setTimeout(r, intervalMs));
+        }
+      };
+
       // ── STEP 4: 녹화 시작 및 재생 (안정성 최적화) ─────────────────────────────
       drawSlide(capturedCanvases[0]);
       await new Promise(r => setTimeout(r, 100));
@@ -784,11 +795,11 @@ export default function CardNewsPage() {
       const PAMPHLET_MS = 5000; // 팜플렛 노출 시간 (5초)
 
       for (let i = 0; i < capturedCanvases.length; i++) {
-        if (i > 0) drawSlide(capturedCanvases[i]);
-        
-        // 마지막 슬라이드(업로드한 팜플렛 등)는 더 길게 보여줌
         const isLastSlide = i === capturedCanvases.length - 1;
-        await new Promise(r => setTimeout(r, isLastSlide ? PAMPHLET_MS : SLIDE_MS));
+        const duration = isLastSlide ? PAMPHLET_MS : SLIDE_MS;
+        
+        // 브라우저 캡처 버그 방지를 위해 대기 시간 동안 계속 다시 그려줌
+        await holdSlide(capturedCanvases[i], duration);
 
         if (!isLastSlide) {
           await crossfade(capturedCanvases[i], capturedCanvases[i + 1], FADE_MS);
