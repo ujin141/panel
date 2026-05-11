@@ -382,6 +382,7 @@ type TrendHubData   = { cardTopics: TrendCardTopic[]; aiWritingTopics: TrendAiTo
 export default function CardNewsPage() {
   const [step,      setStep]      = useState<'setup' | 'editor'>('setup');
   const [category, setCategory]  = useState<CardCategory>('travel');
+  const [language, setLanguage]  = useState<'ko' | 'en'>('ko');
   const [theme,    setTheme]      = useState<CardTheme>('migo');
   const [layout,   setLayout]     = useState<CardLayout>('title-top');
   const [topic,    setTopic]      = useState('');
@@ -465,7 +466,7 @@ export default function CardNewsPage() {
       const res = await fetch('/api/card-news/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, category, theme, brandName: brandName || 'My Brand' }),
+        body: JSON.stringify({ topic, category, theme, brandName: brandName || 'My Brand', language }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: '생성 실패' }));
@@ -497,7 +498,7 @@ export default function CardNewsPage() {
       const res = await fetch('/api/card-news/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, category, theme, brandName: brandName || 'My Brand' }),
+        body: JSON.stringify({ topic, category, theme, brandName: brandName || 'My Brand', language }),
       });
       if (!res.ok) throw new Error('재생성 실패');
       const data = await res.json();
@@ -719,12 +720,10 @@ export default function CardNewsPage() {
 
       // ── 팜플렛 이미지(선택적) 캔버스에 그리기 ──────────────────────
       if (pamphletUrl) {
-        const pamphletImg = new Image();
-        await new Promise<void>((resolve, reject) => {
-          pamphletImg.onload = () => resolve();
-          pamphletImg.onerror = reject;
-          pamphletImg.src = pamphletUrl;
-        });
+        const pamphletImg = document.createElement('img');
+        pamphletImg.src = pamphletUrl;
+        await pamphletImg.decode();
+        
         const pamCanvas = document.createElement('canvas');
         pamCanvas.width = 1080;
         pamCanvas.height = 1080;
@@ -1156,33 +1155,45 @@ export default function CardNewsPage() {
               </div>
             </div>
 
-            {/* Step 3: Brand */}
+            {/* Step 3: Brand & Language */}
             <div className="cn-step">
               <div className="cn-step-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div className="cn-step-num">3</div>
-                  <div className="cn-step-title">브랜드명 (선택)</div>
+                  <div className="cn-step-title">환경 설정</div>
                 </div>
-                <button
-                  onClick={() => {
-                    localStorage.setItem('panelai_brandName', brandName);
-                    alert('브랜드명이 저장되었습니다.');
-                  }}
-                  style={{ fontSize: 11, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 10px', color: '#a5b4fc', cursor: 'pointer', fontWeight: 600 }}
-                >
-                  저장
-                </button>
               </div>
               <div className="cn-step-body">
-                <input
-                  id="brandName"
-                  type="text"
-                  className="form-input"
-                  placeholder="예: Migo, @migo_app"
-                  value={brandName}
-                  onChange={e => setBrandName(e.target.value)}
-                  maxLength={30}
-                />
+                <div className="form-control" style={{ marginBottom: 12 }}>
+                  <label className="label"><span className="label-text" style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>브랜드명</span></label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="예: Migo, @migo_app"
+                    value={brandName}
+                    onChange={e => setBrandName(e.target.value)}
+                    maxLength={30}
+                  />
+                </div>
+                <div className="form-control">
+                  <label className="label"><span className="label-text" style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>언어 (Language)</span></label>
+                  <div style={{ display: 'flex', gap: 6, background: 'rgba(0,0,0,0.2)', padding: 4, borderRadius: 8 }}>
+                    <button
+                      className={`btn btn-sm flex-1 ${language === 'ko' ? 'btn-primary' : 'btn-ghost'}`}
+                      style={language === 'ko' ? { background: '#ef4444', color: '#fff', border: 'none' } : { color: '#94a3b8' }}
+                      onClick={() => setLanguage('ko')}
+                    >
+                      한국어
+                    </button>
+                    <button
+                      className={`btn btn-sm flex-1 ${language === 'en' ? 'btn-primary' : 'btn-ghost'}`}
+                      style={language === 'en' ? { background: '#ef4444', color: '#fff', border: 'none' } : { color: '#94a3b8' }}
+                      onClick={() => setLanguage('en')}
+                    >
+                      English
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 

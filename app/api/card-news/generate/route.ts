@@ -4,38 +4,33 @@ import { openai, getOpenAI } from '@/lib/openai';
 export const dynamic = 'force-dynamic';
 
 // ─── 슬라이드 텍스트 생성 ──────────────────────────────────────────────────────
-async function generateSlides(topic: string, category: string, brandName: string) {
+async function generateSlides(topic: string, category: string, brandName: string, language: string = 'ko') {
   const categoryTranslations: Record<string, string> = {
-    travel: '여행/맛집',
-    beauty: '뷰티/패션',
-    finance: '재테크/돈',
-    fitness: '운동/다이어트',
-    mindset: '자기계발/동기부여',
-    food: '요리/레시피',
-    it: 'IT/AI/꿀팁',
-    daily: '일상/공감',
+    travel: '여행/맛집(Travel/Food)',
+    beauty: '뷰티/패션(Beauty/Fashion)',
+    finance: '재테크/돈(Finance/Money)',
+    fitness: '운동/다이어트(Fitness/Diet)',
+    mindset: '자기계발/동기부여(Mindset/Motivation)',
+    food: '요리/레시피(Food/Recipe)',
+    it: 'IT/AI/꿀팁(IT/Tech/Tips)',
+    daily: '일상/공감(Daily/Relatable)',
   };
 
   const instruction = categoryTranslations[category] || category;
-  const currentDate = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  const currentDate = new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // 주제에서 숫자 추출 (예: '10곳', '5가지', '7개' → 그 숫자만큼 본문 슬라이드 생성)
-  const countMatch = topic.match(/(\d+)\s*(곳|가지|개|군데|장소|맛집|카페|명소|핫플|레스토랑|스팟|방법|단계|스텝)/i);
+  // 주제에서 숫자 추출
+  const countMatch = topic.match(/(\d+)\s*(곳|가지|개|군데|장소|맛집|카페|명소|핫플|레스토랑|스팟|방법|단계|스텝|ways|tips|places|things|steps)/i);
   const requestedCount = countMatch ? parseInt(countMatch[1]) : null;
   const totalSlides = requestedCount ? requestedCount + 2 : 5;
   const bodySlides = requestedCount || 3;
 
   const slideCountInstruction = requestedCount
-    ? `⚠️ [필수] 주제에 "${countMatch![0]}"가 명시되어 있으므로 반드시 본문 슬라이드 ${bodySlides}개를 생성하세요. 총 ${totalSlides}장 (커버1 + 본문${bodySlides} + CTA1).`
-    : `슬라이드는 커버 1장 + 본문 3장 + CTA 1장 = 총 5장으로 구성하세요.`;
+    ? `⚠️ [필수] 주제에 "${countMatch![0]}"가 명시되어 있으므로 반드시 본문 슬라이드 ${bodySlides}개를 생성하세요. 총 ${totalSlides}장 (커버1 + 본문${bodySlides} + CTA1). / Must generate ${bodySlides} body slides. Total ${totalSlides} slides.`
+    : `슬라이드는 커버 1장 + 본문 3장 + CTA 1장 = 총 5장으로 구성하세요. / Slides must be: 1 Cover + 3 Body + 1 CTA = Total 5 slides.`;
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `당신은 대한민국 인스타그램 카드뉴스 트래픽을 지배하는 최고의 알고리즘 해커입니다.
-현재 날짜: ${currentDate}. 모든 정보는 2026년 최신 기준이어야 합니다.
+  const sysPromptKo = `당신은 대한민국 인스타그램 카드뉴스 트래픽을 지배하는 최고의 알고리즘 해커입니다.
+현재 날짜: ${currentDate}. 모든 정보는 최신 기준이어야 합니다.
 반드시 JSON 형식으로만 응답하세요.
 
 법칙:
@@ -53,11 +48,49 @@ JSON 형식:
     { "id": "2", "title": "정보1", "body": "🚨 팩트1\\n✅ 팩트2\\n💡 꿀팁", "tag": "02 / N", "number": "01" },
     { "id": "N", "title": "저장 안 하면\\n100% 후회합니다 🔖", "body": "💾 지금 바로 저장\\n👉 팔로우하고 꿀팁 받기", "tag": "N / N" }
   ]
-}`,
+}`;
+
+  const sysPromptEn = `You are a top global Instagram growth hacker dominating the algorithm.
+Current date: ${currentDate}. All information must be up-to-date.
+Respond strictly in JSON format.
+
+Rules:
+1. Cover: Extreme scroll-stopping hook (e.g., "99% of people do this wrong", "Stop doing OOO right now")
+2. Body: Rare info, hard-hitting facts as an emoji list.
+3. Keep points under 50 characters.
+4. Last slide: "Save this before you forget 🔖"
+5. CTA: Push to "Follow @accountname"
+6. Use \\n for line breaks.
+
+JSON format:
+{
+  "slides": [
+    { "id": "1", "title": "Hook\\nSubtitle", "body": "", "tag": "01 / N" },
+    { "id": "2", "title": "Info 1", "body": "🚨 Fact 1\\n✅ Fact 2\\n💡 Pro tip", "tag": "02 / N", "number": "01" },
+    { "id": "N", "title": "You will regret\\nif you don't save this 🔖", "body": "💾 Save for later\\n👉 Follow for more tips", "tag": "N / N" }
+  ]
+}`;
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      {
+        role: 'system',
+        content: language === 'en' ? sysPromptEn : sysPromptKo,
       },
       {
         role: 'user',
-        content: `주제: "${topic}"
+        content: language === 'en' ? 
+`Topic: "${topic}"
+Category: ${instruction}
+Brand Name: ${brandName}
+
+${slideCountInstruction}
+
+Calculate "tag" exactly as "current number / total slides".
+Include specific real-world information and numbers for each item.` 
+: 
+`주제: "${topic}"
 카드뉴스 유형: ${instruction}
 브랜드명: ${brandName}
 
@@ -78,7 +111,7 @@ tag는 "현재번호 / 총슬라이드수" 형식으로 정확히 계산해서 �
 
 
 // ─── 캡션 + 해시태그 생성 ────────────────────────────────────────────────────
-async function generateCaption(topic: string, category: string, brandName: string): Promise<{ caption: string; hashtags: string[] }> {
+async function generateCaption(topic: string, category: string, brandName: string, language: string = 'ko'): Promise<{ caption: string; hashtags: string[] }> {
   const categoryHint: Record<string, string> = {
     tips: '꿀팁/노하우 공유 톤으로',
     facts: '정보 전달 + 신뢰감 있는 톤으로',
@@ -87,26 +120,37 @@ async function generateCaption(topic: string, category: string, brandName: strin
     howto: '단계별 안내, 친절한 톤으로',
   };
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `당신은 대한민국 1위 바이럴 마케터입니다. 반드시 JSON 형식으로만 응답하세요.
+  const sysPromptKo = `당신은 대한민국 1위 바이럴 마케터입니다. 반드시 JSON 형식으로만 응답하세요.
 
 {
   "caption": "[첫줄 훅]\\n\\n[핵심 가치]\\n\\n🎁 댓글에 'OO'이라고 남겨주시면 DM으로 링크 드려요!\\n\\n🔖 지금 바로 저장!\\n👉 @{브랜드명} 팔로우",
   "hashtags": ["태그1", "태그2"]
-}`,
-      },
-      {
-        role: 'user',
-        content: `주제: "${topic}"
+}`;
+
+  const sysPromptEn = `You are a top global viral marketer. Respond strictly in JSON format.
+
+{
+  "caption": "[Scroll-stopping hook]\\n\\n[Core value/Information]\\n\\n🎁 Comment 'OO' and I'll DM you the link!\\n\\n🔖 Save this post right now!\\n👉 Follow @{brandName} for more",
+  "hashtags": ["tag1", "tag2"]
+}`;
+
+  const userPromptKo = `주제: "${topic}"
 카테고리: ${categoryHint[category] || categoryHint.tips}
 브랜드명: ${brandName}
 
-댓글(오토DM 유도), 저장, 팔로우가 터질 인스타그램 캡션과 해시태그 18~20개를 작성해줘.`,
-      },
+댓글(오토DM 유도), 저장, 팔로우가 터질 인스타그램 캡션과 해시태그 18~20개를 작성해줘.`;
+
+  const userPromptEn = `Topic: "${topic}"
+Category: ${category}
+Brand Name: ${brandName}
+
+Write an engaging Instagram caption that drives comments (Auto-DM), saves, and follows, along with 18-20 highly relevant hashtags.`;
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: language === 'en' ? sysPromptEn.replace('{brandName}', brandName) : sysPromptKo.replace('{브랜드명}', brandName) },
+      { role: 'user', content: language === 'en' ? userPromptEn : userPromptKo },
     ],
     temperature: 0.85,
     max_tokens: 700,
@@ -118,7 +162,13 @@ async function generateCaption(topic: string, category: string, brandName: strin
 }
 
 // ─── 캡션 폴백 ───────────────────────────────────────────────────────────────
-function buildFallbackCaption(topic: string, category: string, brandName: string): { caption: string; hashtags: string[] } {
+function buildFallbackCaption(topic: string, category: string, brandName: string, language: string = 'ko'): { caption: string; hashtags: string[] } {
+  if (language === 'en') {
+    return {
+      caption: `Did you know about ${topic}? You're missing out if you don't! 😳\n\nI've packed all the essential points into these slides.\n\n🎁 Comment 'INFO' and I'll DM you the detailed link!\n\n🔖 Save this so you don't lose it!\n👉 Follow ${brandName} for weekly tips.`,
+      hashtags: [`#${topic.replace(/\s/g, '')}`, '#tips', '#saveforlater', '#hacks', '#infoshare', '#useful', '#instagram', '#carousel']
+    };
+  }
   const caption = `혹시 ${topic} 제대로 알고 계셨나요? 모르면 진짜 손해예요 😳\n\n꼭 알아야 할 핵심만 골라서 카드뉴스로 만들었어요.\n\n🎁 댓글에 '정보'라고 남겨주시면 DM으로 상세 링크 드릴게요!\n\n🔖 나중에 또 찾으려면 지금 저장!\n👉 ${brandName} 팔로우하면 매주 꿀팁 드려요`;
   const hashtags = [`#${topic.replace(/\s/g, '')}`, '#꿀팁', '#저장필수', '#정보공유', '#생활꿀팁', '#팁공유', '#유용한정보', '#노하우', '#실용정보', '#추천', '#팔로우', '#소통해요', '#알아두면좋은것', '#인스타그램', '#카드뉴스'];
   return { caption, hashtags };
@@ -253,7 +303,16 @@ function isOpenAIBillingError(error: any): boolean {
 }
 
 // ─── 폴백 슬라이드 템플릿 ─────────────────────────────────────────────────────
-function buildFallbackSlides(topic: string, brandName: string, _category: string = 'tips') {
+function buildFallbackSlides(topic: string, brandName: string, _category: string = 'tips', language: string = 'ko') {
+  if (language === 'en') {
+    return [
+      { id: '1', title: `Secret tips about\n${topic} you didn't know`, body: '', tag: '01 / 05' },
+      { id: '2', title: 'Mind-blowing\nfirst tip', body: `📌 The core point everyone misses\n✅ You can apply this today\n💡 Just doing this will change everything`, tag: '02 / 05', number: '01' },
+      { id: '3', title: 'If you didn\\'t know,\nchange starts now', body: `🔥 Why so many people give up\n✅ Solved with this one method\n💰 A secret that saves time & money`, tag: '03 / 05', number: '02' },
+      { id: '4', title: 'Hidden tip\nexperts use', body: `⭐ You'll wonder why you didn't know\n✅ Actionable tip right now\n👉 Common habit of experts`, tag: '04 / 05', number: '03' },
+      { id: '5', title: `You'll lose this\nif you don't save 🔖`, body: `💾 Save it right now\n👉 Follow ${brandName} for weekly tips`, tag: '05 / 05' },
+    ];
+  }
   return [
     { id: '1', title: `99%가 모르는\n${topic} 진짜 꿀팁`, body: '', tag: '01 / 05' },
     { id: '2', title: '알면 소름 돋는\n첫 번째 꿀팁', body: `📌 대부분이 놓치는 핵심 포인트예요\n✅ 바로 오늘부터 써먹을 수 있어요\n💡 이것만 해도 결과가 확 달라집니다`, tag: '02 / 05', number: '01' },
@@ -268,7 +327,7 @@ export async function POST(req: NextRequest) {
   let body: any = {};
   try {
     body = await req.json();
-    const { topic, category, theme, brandName } = body;
+    const { topic, category, theme, brandName, language = 'ko' } = body;
 
     if (!topic && !category) {
       return NextResponse.json({ error: '주제 또는 카테고리가 필요합니다' }, { status: 400 });
@@ -276,8 +335,8 @@ export async function POST(req: NextRequest) {
 
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your_openai_api_key') {
       return NextResponse.json({
-        slides: buildFallbackSlides(topic || '인스타그램 성장', brandName || 'My Brand', category || 'tips'),
-        caption: buildFallbackCaption(topic || '인스타그램 성장', category || 'tips', brandName || 'My Brand'),
+        slides: buildFallbackSlides(topic || '인스타그램 성장', brandName || 'My Brand', category || 'tips', language),
+        caption: buildFallbackCaption(topic || '인스타그램 성장', category || 'tips', brandName || 'My Brand', language),
         coverImageUrl: null,
         fallback: true,
       });
@@ -287,16 +346,16 @@ export async function POST(req: NextRequest) {
     const effectiveBrand = brandName || 'My Brand';
     const effectiveCategory = category || 'tips';
 
-    let slidesData: any = { slides: buildFallbackSlides(effectiveTopic, effectiveBrand, effectiveCategory) };
-    let captionData = buildFallbackCaption(effectiveTopic, effectiveCategory, effectiveBrand);
+    let slidesData: any = { slides: buildFallbackSlides(effectiveTopic, effectiveBrand, effectiveCategory, language) };
+    let captionData = buildFallbackCaption(effectiveTopic, effectiveCategory, effectiveBrand, language);
     let coverImageUrl: string | null = null;
     let imageError: string | null = null;
     let slideImages: (string | null)[] = [];
 
     try {
       const [slidesResult, captionResult] = await Promise.all([
-        generateSlides(effectiveTopic, effectiveCategory, effectiveBrand),
-        generateCaption(effectiveTopic, effectiveCategory, effectiveBrand),
+        generateSlides(effectiveTopic, effectiveCategory, effectiveBrand, language),
+        generateCaption(effectiveTopic, effectiveCategory, effectiveBrand, language),
       ]);
       slidesData = slidesResult;
       captionData = captionResult;
@@ -322,8 +381,8 @@ export async function POST(req: NextRequest) {
     } catch (innerError: any) {
       if (isOpenAIBillingError(innerError)) {
         return NextResponse.json({
-          slides: buildFallbackSlides(effectiveTopic, effectiveBrand, effectiveCategory),
-          caption: buildFallbackCaption(effectiveTopic, effectiveCategory, effectiveBrand),
+          slides: buildFallbackSlides(effectiveTopic, effectiveBrand, effectiveCategory, language),
+          caption: buildFallbackCaption(effectiveTopic, effectiveCategory, effectiveBrand, language),
           coverImageUrl: null,
           slideImages: [],
           fallback: true,
@@ -348,9 +407,10 @@ export async function POST(req: NextRequest) {
       const t = body?.topic || '인스타그램 성장';
       const b = body?.brandName || 'My Brand';
       const c = body?.category || 'tips';
+      const l = body?.language || 'ko';
       return NextResponse.json({
-        slides: buildFallbackSlides(t, b, c),
-        caption: buildFallbackCaption(t, c, b),
+        slides: buildFallbackSlides(t, b, c, l),
+        caption: buildFallbackCaption(t, c, b, l),
         coverImageUrl: null,
         fallback: true,
         warning: 'OpenAI 크레딧 한도 초과. 샘플 슬라이드를 표시합니다.',
