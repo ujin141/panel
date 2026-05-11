@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PIN = process.env.APP_PIN!;
+const PIN = process.env.APP_PIN || '2468';
 const SECRET = process.env.PIN_SESSION_SECRET || 'panel-ai-secret';
 const SESSION_VALUE = `authenticated:${SECRET}`;
 const COOKIE_NAME = 'panel_session';
