@@ -137,8 +137,22 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
       position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
       padding: 0, boxSizing: 'border-box',
-      background: coverImageUrl ? `url(${coverImageUrl}) center/cover no-repeat` : t.coverBg,
+      background: coverImageUrl ? t.coverBg : t.coverBg,
     }}>
+      {/* 고화질 배경 이미지 (img 태그로 렌더링 — CSS background보다 화질 우수) */}
+      {coverImageUrl && (
+        <img
+          src={coverImageUrl}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
+            zIndex: 0,
+            imageRendering: 'auto',
+          }}
+          crossOrigin="anonymous"
+        />
+      )}
       {/* 이미지 위 오버레이 */}
       {coverImageUrl && !hideOverlay && (
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.65) 100%)', zIndex: 1 }} />
@@ -167,8 +181,8 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
           backdropFilter: 'blur(8px)',
           border: coverImageUrl ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${t.accentDot || 'rgba(255,255,255,0.3)'}`,
           borderRadius: 999,
-          padding: '6px 16px',
-          fontSize: 13, fontWeight: 900,
+          padding: '10px 22px',
+          fontSize: 20, fontWeight: 900,
           color: '#fff',
           letterSpacing: '0.05em',
           textTransform: 'uppercase',
@@ -189,18 +203,18 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
           </div>
         )}
         <div style={{
-          fontSize: 28, fontWeight: 900, lineHeight: 1.35, whiteSpace: 'pre-line',
+          fontSize: 52, fontWeight: 900, lineHeight: 1.25, whiteSpace: 'pre-line',
           letterSpacing: '-0.03em',
           color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
-          textShadow: coverImageUrl ? '0 2px 16px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5)' : 'none',
-          marginBottom: 12,
+          textShadow: coverImageUrl ? '0 2px 24px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)' : 'none',
+          marginBottom: 16,
           wordBreak: 'keep-all',
         }}>
           {slide.title || 'Card Title'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ height: 2, width: 20, background: coverImageUrl ? 'rgba(255,255,255,0.6)' : (t.accentDot || 'rgba(255,255,255,0.4)'), borderRadius: 1 }} />
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: coverImageUrl ? 'rgba(255,255,255,0.7)' : (t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)') }}>01 / 05</div>
+          <div style={{ height: 3, width: 32, background: coverImageUrl ? 'rgba(255,255,255,0.6)' : (t.accentDot || 'rgba(255,255,255,0.4)'), borderRadius: 1 }} />
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: coverImageUrl ? 'rgba(255,255,255,0.7)' : (t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)') }}>01 / 05</div>
         </div>
       </div>
       )}
@@ -232,15 +246,29 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
       alignItems: isCenter ? 'center' : 'flex-start',
       padding: '36px 24px', boxSizing: 'border-box',
       textAlign: isCenter ? 'center' : 'left',
-      background: coverImageUrl ? `url(${coverImageUrl}) center/cover no-repeat` : t.bg,
+      background: coverImageUrl ? t.bg : t.bg,
     }}>
-      {/* 이미지 오버레이 (can을 매우 블러 처리) */}
+      {/* 고화질 배경 이미지 (img 태그로 렌더링 — CSS background보다 화질 우수) */}
+      {coverImageUrl && (
+        <img
+          src={coverImageUrl}
+          alt=""
+          style={{
+            position: 'absolute', inset: 0, width: '100%', height: '100%',
+            objectFit: 'cover', objectPosition: 'center',
+            zIndex: 0,
+            imageRendering: 'auto',
+          }}
+          crossOrigin="anonymous"
+        />
+      )}
+      {/* 이미지 오버레이 */}
       {coverImageUrl && !hideOverlay && (
         <div style={{
           position: 'absolute', inset: 0,
           background: imageOverlay,
           backdropFilter: 'blur(1px)',
-          zIndex: 0,
+          zIndex: 1,
         }} />
       )}
 
@@ -257,11 +285,11 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
       <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         {!isLast && slide.number && layout !== 'big-number' && (
           <div style={{
-            width: 36, height: 36, borderRadius: '50%',
+            width: 56, height: 56, borderRadius: '50%',
             background: numColor,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, fontWeight: 900, color: '#fff',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+            fontSize: 26, fontWeight: 900, color: '#fff',
+            boxShadow: '0 2px 16px rgba(0,0,0,0.3)',
             flexShrink: 0,
           }}>
             {slide.number}
@@ -271,16 +299,16 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
           <div style={{ fontSize: 24 }}>🌟</div>
         )}
         <div style={{
-          fontSize: 11, fontWeight: 800, letterSpacing: '0.05em',
+          fontSize: 20, fontWeight: 800, letterSpacing: '0.05em',
           textTransform: 'uppercase',
           background: coverImageUrl ? 'rgba(0,0,0,0.35)' : (t.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.7)'),
           backdropFilter: coverImageUrl ? 'blur(8px)' : 'none',
           border: `1px solid ${coverImageUrl ? 'rgba(255,255,255,0.4)' : (t.accentDot || (t.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'))}`,
           borderRadius: 999,
-          padding: '4px 12px',
+          padding: '8px 20px',
           color: '#fff',
           marginLeft: 'auto',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
         }}>
           {brandName}
         </div>
@@ -291,21 +319,21 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
       {!hideText && (
       <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 0' }}>
         {layout === 'big-number' && slide.number && (
-          <div style={{ fontSize: 72, fontWeight: 900, lineHeight: 0.85, color: coverImageUrl ? 'rgba(255,255,255,0.15)' : (t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'), marginBottom: 6, letterSpacing: '-0.05em' }}>{slide.number}</div>
+          <div style={{ fontSize: 130, fontWeight: 900, lineHeight: 0.85, color: coverImageUrl ? 'rgba(255,255,255,0.15)' : (t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'), marginBottom: 8, letterSpacing: '-0.05em' }}>{slide.number}</div>
         )}
         {layout === 'quote' && (
-          <div style={{ fontSize: 56, lineHeight: 0.7, color: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'), marginBottom: 10, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
+          <div style={{ fontSize: 100, lineHeight: 0.7, color: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'), marginBottom: 14, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
         )}
         {slide.tag && (
-          <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: coverImageUrl ? 'rgba(255,255,255,0.6)' : t.accent, marginBottom: 10, textTransform: 'uppercase', opacity: 0.8 }}>{slide.tag}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.12em', color: coverImageUrl ? 'rgba(255,255,255,0.6)' : t.accent, marginBottom: 16, textTransform: 'uppercase', opacity: 0.8 }}>{slide.tag}</div>
         )}
 
         <div style={{ marginBottom: slide.body ? 20 : 0 }}>
           <div style={{
-            fontSize: 22, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
-            lineHeight: 1.3, whiteSpace: 'pre-line',
+            fontSize: 42, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
+            lineHeight: 1.25, whiteSpace: 'pre-line',
             letterSpacing: '-0.02em',
-            textShadow: coverImageUrl ? '0 2px 14px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.4)' : 'none',
+            textShadow: coverImageUrl ? '0 2px 20px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.5)' : 'none',
             wordBreak: 'keep-all',
           }}>
             {slide.title || 'Slide Title'}
@@ -335,22 +363,22 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
               );
               return (
                 <div key={li} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 8,
-                  fontSize: isListItem ? 13 : 12.5,
+                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 12,
+                  fontSize: isListItem ? 24 : 22,
                   fontWeight: isListItem ? 700 : 500,
-                  lineHeight: 1.6,
+                  lineHeight: 1.55,
                   color: coverImageUrl
                     ? (isListItem ? '#fff' : 'rgba(255,255,255,0.95)')
                     : (isListItem ? t.text : (t.isDark ? 'rgba(255,255,255,0.85)' : '#333')),
-                  textShadow: coverImageUrl ? '0 1px 8px rgba(0,0,0,0.6)' : 'none',
+                  textShadow: coverImageUrl ? '0 1px 10px rgba(0,0,0,0.7)' : 'none',
                   letterSpacing: '-0.01em',
                   wordBreak: 'keep-all',
                 }}>
                   {!isListItem && (
                     <span style={{
-                      width: 4, height: 4, borderRadius: '50%',
+                      width: 7, height: 7, borderRadius: '50%',
                       background: coverImageUrl ? 'rgba(255,255,255,0.5)' : numColor,
-                      flexShrink: 0, marginTop: 7,
+                      flexShrink: 0, marginTop: 10,
                     }} />
                   )}
                   <span>{trimmed}</span>
@@ -405,11 +433,13 @@ export default function CardNewsPage() {
   const [downloading,      setDownloading]      = useState(false);
   const [downloadingAll,   setDownloadingAll]   = useState(false);
   const [downloadingVideo, setDownloadingVideo] = useState(false);
+  const [pendingVideoBlob, setPendingVideoBlob] = useState<{ blob: Blob; fileName: string } | null>(null);
   const [slideImages,      setSlideImages]      = useState<(string | null)[]>([]);
   const [slideVideos,      setSlideVideos]      = useState<(string | null)[]>([]);
   const [slideHideText,    setSlideHideText]    = useState<boolean[]>([]);
   const [slideHideOverlay, setSlideHideOverlay] = useState<boolean[]>([]);
   const [pamphletUrl,      setPamphletUrl]      = useState<string | null>(null);
+  const [reelsDurationPerSlide, setReelsDurationPerSlide] = useState<number>(2000); // ms per slide
   const [trends, setTrends] = useState<Array<{topic:string;reason:string;hashtags:string[];hotScore:number;estimatedViews?:string;viewReason?:string;source?:string}>>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string;estimatedViews?:string;viralScore?:number;analysis?:string}>>([]);
@@ -499,7 +529,7 @@ export default function CardNewsPage() {
     setTrendHubLoading(true);
     setTrendHub(null);
     try {
-      const res = await fetch(`/api/trending-topics?category=${cat === 'all' ? '' : cat}&mode=all&t=${Date.now()}`);
+      const res = await fetch(`/api/trending-topics?category=${cat === 'all' ? '' : cat}&mode=all&lang=${language}&t=${Date.now()}`);
       const data = await res.json();
       setTrendHub(data);
     } catch (e: any) {
@@ -683,7 +713,7 @@ export default function CardNewsPage() {
     }
   };
 
-  // ── 슬라이드를 1080×1080 고화질 캔버스로 캡처 (미리보기와 동일 비율) ─────────────────────────
+  // ── 슬라이드를 1080×1920 고화질 캔버스로 캡처 ─────────────────────────
   const captureSlide = async (idx: number): Promise<HTMLCanvasElement> => {
     const h2c = (await import('html2canvas')).default as any;
     const { createRoot } = await import('react-dom/client');
@@ -694,11 +724,15 @@ export default function CardNewsPage() {
     if (rawUrl) imgDataUrl = await toDataUrl(rawUrl);
 
     const container = hiddenRenderRef.current!;
-    container.innerHTML = '';
+    // ⚠️ innerHTML = '' 금지 — React가 소유한 노드를 강제 삭제하면 insertBefore 오류 발생
+    // 대신 각 슬라이드마다 새 wrapEl을 생성하고 unmount 후 removeChild로 안전하게 정리
 
-    // 1080x1920 출력을 위해 270x480 (9:16) 렌더링 후 scale 4배 적용
+    const RENDER_W = 540;
+    const RENDER_H = 960;
+    const SCALE = 2; // 540*2 = 1080, 960*2 = 1920
+
     const wrapEl = document.createElement('div');
-    wrapEl.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:270px;height:480px;overflow:hidden;';
+    wrapEl.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${RENDER_W}px;height:${RENDER_H}px;overflow:hidden;`;
     container.appendChild(wrapEl);
 
     const root = createRoot(wrapEl);
@@ -721,23 +755,26 @@ export default function CardNewsPage() {
               })
         )
       );
-      setTimeout(resolve, 900); // 이미지+폰트 완전 로드 대기
+      setTimeout(resolve, 1500);
     });
 
     // 1080x1920 출력을 위한 스케일
     const canvas = await h2c(wrapEl, {
-      scale: 4,
+      scale: SCALE,
       useCORS: true,
       allowTaint: true,
       backgroundColor: null,
       logging: false,
-      width: 270,
-      height: 480,
-      imageTimeout: 15000,
+      width: RENDER_W,
+      height: RENDER_H,
+      imageTimeout: 20000,
     });
 
+    // React 언마운트 → DOM에서 안전하게 제거 (innerHTML 금지)
     root.unmount();
-    container.innerHTML = '';
+    if (container.contains(wrapEl)) {
+      container.removeChild(wrapEl);
+    }
     return canvas;
   };
 
@@ -824,36 +861,58 @@ export default function CardNewsPage() {
       const videoCanvas = document.createElement('canvas');
       videoCanvas.width = 1080;
       videoCanvas.height = 1920; // 릴스/쇼츠 사이즈 (9:16 비율)
-      const ctx = videoCanvas.getContext('2d')!;
+      const ctx = videoCanvas.getContext('2d', { alpha: false })!;
       if (!ctx) throw new Error('Canvas context error');
+      // 고화질 이미지 스케일링 설정
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
-      // 지원 포맷 확인 (MP4 우선)
-      let mimeType = 'video/webm;codecs=vp9';
-      if (MediaRecorder.isTypeSupported('video/mp4')) {
+      // 지원 포맷 확인 (MP4 우선 → Windows에서 바로 재생 가능)
+      let mimeType = 'video/webm';
+      let fileExt = 'webm';
+      // Chrome 117+ 는 MP4 녹화 지원 → Windows에서 바로 영상 인식
+      if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) {
+        mimeType = 'video/mp4;codecs=avc1';
+        fileExt = 'mp4';
+      } else if (MediaRecorder.isTypeSupported('video/mp4')) {
         mimeType = 'video/mp4';
-      } else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
-        mimeType = 'video/webm;codecs=h264';
+        fileExt = 'mp4';
+      } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+        mimeType = 'video/webm;codecs=vp9';
+      } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+        mimeType = 'video/webm;codecs=vp8';
       }
+      console.log(`[Video] Using codec: ${mimeType}, ext: ${fileExt}`);
 
-      // 모바일(릴스/쇼츠) 재인코딩 시 버벅임 방지를 위해 30fps 및 8Mbps 로 안정화
+      // 고화질 릴스 영상
       const stream = videoCanvas.captureStream(30);
       const recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 8_000_000, // 8Mbps — 버벅임 없는 최적화 화질
+        videoBitsPerSecond: 10_000_000,
       });
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = e => { if (e.data?.size > 0) chunks.push(e.data); };
 
       const recordPromise = new Promise<void>((resolve) => {
         recorder.onstop = () => {
-          const blob = new Blob(chunks, { type: mimeType.split(';')[0] });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-          link.download = `${(topic || 'card-news').slice(0, 20)}-reels.${ext}`;
-          link.click();
-          URL.revokeObjectURL(url);
+          const blobMime = fileExt === 'mp4' ? 'video/mp4' : 'video/webm';
+          const blob = new Blob(chunks, { type: blobMime });
+          console.log(`[Video] Final: ${(blob.size / 1024 / 1024).toFixed(1)}MB, ${blobMime}`);
+
+          if (blob.size < 1000) {
+            alert(t.videoFailed);
+            resolve();
+            return;
+          }
+
+          const safeName = (topic || 'card-news')
+            .replace(/[<>:"/\\|?*]/g, '')
+            .replace(/\s+/g, '-')
+            .slice(0, 30) || 'card-news';
+          const fileName = `${safeName}-reels.${fileExt}`;
+
+          // blob을 state에 저장 → 다운로드 버튼 표시
+          setPendingVideoBlob({ blob, fileName });
           resolve();
         };
       });
@@ -883,7 +942,19 @@ export default function CardNewsPage() {
       }
 
       const totalSlides = capturedCanvases.length;
-      console.log(`[Video] Recording ${totalSlides} total frames (including pamphlet)`);
+
+      // ── 예상 영상 시간 계산 & 로깅 ──────────────────────────────
+      const SLIDE_MS = reelsDurationPerSlide; // 사용자 선택 슬라이드당 표시 시간
+      const FADE_MS  = 400;         // 전환 효과 0.4초
+      const PAMPHLET_MS = 5000;     // 팜플렛 5초
+      const LAST_SLIDE_EXTRA = 600; // 마지막 슬라이드 안전 여유
+
+      const contentSlides = pamphletUrl ? totalSlides - 1 : totalSlides;
+      const expectedMs = (contentSlides * SLIDE_MS)
+        + ((totalSlides - 1) * FADE_MS)
+        + (pamphletUrl ? PAMPHLET_MS : 0)
+        + LAST_SLIDE_EXTRA;
+      console.log(`[Video] Recording ${totalSlides} slides (pamphlet: ${!!pamphletUrl}), expected duration: ${(expectedMs / 1000).toFixed(1)}s`);
 
       // ── STEP 3: 디졸브 전환 효과 준비 ───────────────────────────
       const drawSingleSlide = (sc: HTMLCanvasElement, alpha: number = 1) => {
@@ -898,68 +969,89 @@ export default function CardNewsPage() {
         drawSingleSlide(sc, 1);
       };
 
+      // wall-clock 기반 대기 (setTimeout 누적 오차 방지)
+      const waitMs = (ms: number) => new Promise<void>(resolve => {
+        const start = performance.now();
+        const tick = () => {
+          if (performance.now() - start >= ms) resolve();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+
+      const FRAME_MS = 1000 / 30; // ~33.33ms per frame
+
       const crossfade = async (sc1: HTMLCanvasElement, sc2: HTMLCanvasElement, durationMs: number) => {
-        const fps = 30;
-        const frames = Math.floor((durationMs / 1000) * fps);
-        const intervalMs = 1000 / fps;
-        
-        for (let i = 0; i <= frames; i++) {
-          const alpha = i / frames;
+        const start = performance.now();
+        let last = start;
+        while (true) {
+          const now = performance.now();
+          const elapsed = now - start;
+          if (elapsed >= durationMs) break;
+
+          const alpha = Math.min(elapsed / durationMs, 1);
           ctx.globalAlpha = 1;
           ctx.fillStyle = '#000';
           ctx.fillRect(0, 0, 1080, 1920);
-          
           drawSingleSlide(sc1, 1 - alpha);
           drawSingleSlide(sc2, alpha);
-          
-          if (i % 10 === 0) recorder.requestData();
-          await new Promise(r => setTimeout(r, intervalMs));
+
+          // 500ms마다 데이터 요청
+          if (now - last >= 500) { recorder.requestData(); last = now; }
+          await waitMs(FRAME_MS);
         }
+        // 마지막 프레임 (완전히 sc2로)
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, 1080, 1920);
+        drawSingleSlide(sc2, 1);
         ctx.globalAlpha = 1;
       };
 
       const holdSlide = async (sc: HTMLCanvasElement, durationMs: number) => {
-        const fps = 30;
-        const frames = Math.floor((durationMs / 1000) * fps);
-        const intervalMs = 1000 / fps;
-        for (let i = 0; i < frames; i++) {
+        const start = performance.now();
+        let last = start;
+        while (performance.now() - start < durationMs) {
           drawSlide(sc);
-          if (i % 10 === 0) recorder.requestData();
-          await new Promise(r => setTimeout(r, intervalMs));
+          const now = performance.now();
+          if (now - last >= 500) { recorder.requestData(); last = now; }
+          await waitMs(FRAME_MS);
         }
+        // 마지막 프레임 확정
+        drawSlide(sc);
       };
 
       // ── STEP 4: 녹화 시작 및 재생 ─────────────────────────────
       // 첫 프레임을 확실히 그린 후 녹화 시작
       drawSlide(capturedCanvases[0]);
-      recorder.start(100); // 100ms마다 자동으로 데이터 수집
-      await new Promise(r => setTimeout(r, 200));
-
-      const SLIDE_MS = 3000;   // 슬라이드당 3초 (기존 2.5초 → 안정성 향상)
-      const FADE_MS  = 600; 
-      const PAMPHLET_MS = 5000;
-      const LAST_SLIDE_EXTRA = 500; // 마지막 슬라이드 추가 대기
+      recorder.start(500); // 500ms마다 데이터 수집 (코덱 효율 향상)
+      await waitMs(300); // 레코더 안정화 대기
 
       for (let i = 0; i < totalSlides; i++) {
         const isLastSlide = i === totalSlides - 1;
         const isPamphlet = pamphletUrl && isLastSlide;
         const duration = isPamphlet ? PAMPHLET_MS : SLIDE_MS;
         
-        console.log(`[Video] Rendering slide ${i + 1}/${totalSlides}`);
+        console.log(`[Video] Rendering slide ${i + 1}/${totalSlides} (${duration}ms)`);
         await holdSlide(capturedCanvases[i], duration);
 
         if (!isLastSlide) {
           await crossfade(capturedCanvases[i], capturedCanvases[i + 1], FADE_MS);
         } else {
-          // 마지막 프레임이 확실히 영상에 담기도록
+          // 마지막 프레임이 확실히 영상에 담기도록 충분히 대기
+          drawSlide(capturedCanvases[i]);
           recorder.requestData();
-          await new Promise(r => setTimeout(r, LAST_SLIDE_EXTRA));
-          drawSlide(capturedCanvases[i]); // 마지막 프레임 한 번 더 그리기
+          await waitMs(LAST_SLIDE_EXTRA);
+          // 마지막 프레임 한 번 더 그리고 데이터 확보
+          drawSlide(capturedCanvases[i]);
           recorder.requestData();
-          await new Promise(r => setTimeout(r, 500));
+          await waitMs(600);
         }
       }
 
+      // 최종 데이터 플러시 후 레코더 종료
+      recorder.requestData();
+      await waitMs(400);
       recorder.stop();
       await recordPromise;
 
@@ -970,7 +1062,7 @@ export default function CardNewsPage() {
       if (hiddenRenderRef.current) hiddenRenderRef.current.innerHTML = '';
       setDownloadingVideo(false);
     }
-  }, [slides, theme, brandName, topic, layout, coverImageUrl, slideImages, downloadingVideo, pamphletUrl, slideHideText, slideHideOverlay]);
+  }, [slides, theme, brandName, topic, layout, coverImageUrl, slideImages, downloadingVideo, pamphletUrl, slideHideText, slideHideOverlay, reelsDurationPerSlide]);
 
   const renderPreview = (idx: number) => {
     if (!slides[idx]) return null;
@@ -1816,7 +1908,7 @@ export default function CardNewsPage() {
                       <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(239,68,68,0.3)' }}>
                         <video
                           src={slideVideos[currentIdx]!}
-                          style={{ width: '100%', maxHeight: 120, objectFit: 'cover', display: 'block' }}
+                          style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}
                           autoPlay muted loop playsInline
                         />
                         <div style={{
@@ -1907,16 +1999,105 @@ export default function CardNewsPage() {
                   )}
                 </div>
 
+                {/* 릴스 영상 시간 설정 */}
+                <div style={{ marginTop: 4, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#fca5a5' }}>⏱ {isEn ? 'Duration per slide' : '슬라이드당 시간'}</span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 800,
+                      color: (() => {
+                        const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000;
+                        return totalS > 90 ? '#f87171' : totalS > 60 ? '#fbbf24' : '#86efac';
+                      })(),
+                    }}>
+                      {isEn ? 'Est.' : '예상'} {(() => {
+                        const totalS = Math.round((slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000);
+                        return totalS >= 60 ? `${Math.floor(totalS/60)}분 ${totalS%60}초` : `${totalS}초`;
+                      })()}
+                      {(() => {
+                        const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000;
+                        return totalS > 90 ? ' ⚠️' : '';
+                      })()}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {([1000, 1500, 2000, 3000] as const).map(ms => (
+                      <button
+                        key={ms}
+                        onClick={() => setReelsDurationPerSlide(ms)}
+                        style={{
+                          flex: 1, padding: '6px 0', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                          background: reelsDurationPerSlide === ms ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.05)',
+                          border: `1px solid ${reelsDurationPerSlide === ms ? '#f87171' : 'rgba(255,255,255,0.1)'}`,
+                          color: reelsDurationPerSlide === ms ? '#fca5a5' : 'rgba(255,255,255,0.45)',
+                        }}
+                      >{ms === 1000 ? '1초' : ms === 1500 ? '1.5초' : ms === 2000 ? '2초' : '3초'}</button>
+                    ))}
+                  </div>
+                  {(() => {
+                    const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000;
+                    return totalS > 90 ? (
+                      <p style={{ fontSize: 10, color: '#f87171', marginTop: 6 }}>
+                        ⚠️ {isEn ? 'Instagram Reels max is 90s. Consider shorter duration or fewer slides.' : '인스타 릴스 최대 90초. 슬라이드 시간을 줄이거나 컷을 줄여주세요.'}
+                      </p>
+                    ) : null;
+                  })()}
+                </div>
+
                 <button
                   className="btn btn-primary btn-sm"
-                  style={{ width: '100%', marginTop: 4, background: 'linear-gradient(135deg, #ef4444, #f97316)', borderColor: 'transparent', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }}
-                  onClick={handleDownloadVideo}
+                  style={{ width: '100%', marginTop: 8, background: 'linear-gradient(135deg, #ef4444, #f97316)', borderColor: 'transparent', boxShadow: '0 4px 10px rgba(239,68,68,0.3)' }}
+                  onClick={() => { setPendingVideoBlob(null); handleDownloadVideo(); }}
                   disabled={downloadingAll || downloadingVideo}
                 >
                   {downloadingVideo
                     ? <><div className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} />{t.renderingVideo}</>
                     : <><Download size={13} />{t.downloadReels}</>}
                 </button>
+
+
+                {/* 영상 생성 완료 → MP4 다운로드 버튼 */}
+                {pendingVideoBlob && !downloadingVideo && (
+                  <button
+                    className="btn btn-primary btn-sm"
+                    style={{
+                      width: '100%', marginTop: 6,
+                      background: 'linear-gradient(135deg, #10b981, #059669)',
+                      borderColor: 'transparent',
+                      boxShadow: '0 4px 14px rgba(16,185,129,0.4)',
+                      fontSize: 14, fontWeight: 800, padding: '10px 0',
+                      animation: 'pulse 1.5s infinite',
+                    }}
+                    onClick={async () => {
+                      const { blob, fileName } = pendingVideoBlob;
+                      // showSaveFilePicker — 사용자 클릭 직후이므로 정상 작동
+                      if ('showSaveFilePicker' in window) {
+                        try {
+                          const handle = await (window as any).showSaveFilePicker({
+                            suggestedName: fileName,
+                            types: [{ description: 'MP4 Video', accept: { 'video/mp4': ['.mp4'] } }],
+                          });
+                          const w = await handle.createWritable();
+                          await w.write(blob);
+                          await w.close();
+                          setPendingVideoBlob(null);
+                          return;
+                        } catch (e: any) {
+                          if (e?.name === 'AbortError') return;
+                        }
+                      }
+                      // 폴백: anchor 다운로드
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url; a.download = fileName;
+                      document.body.appendChild(a); a.click();
+                      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 10000);
+                      setPendingVideoBlob(null);
+                    }}
+                  >
+                    <Download size={15} /> ⬇️ {isEn ? `Download MP4 (${(pendingVideoBlob.blob.size / 1024 / 1024).toFixed(1)}MB)` : `MP4 다운로드 (${(pendingVideoBlob.blob.size / 1024 / 1024).toFixed(1)}MB)`}
+                  </button>
+                )}
 
                 <div className="cn-panel-divider" />
 
