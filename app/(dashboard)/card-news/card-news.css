@@ -287,3 +287,148 @@
   color: #fff;
 }
 
+/* ── 컷 관리 액션 버튼 ─────────────────────────────────────────── */
+.cn-slide-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cn-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms;
+  border: 1px solid;
+}
+.cn-action-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.cn-action-add {
+  background: rgba(16,185,129,0.1);
+  border-color: rgba(16,185,129,0.3);
+  color: #6ee7b7;
+  flex: 1;
+}
+.cn-action-add:hover:not(:disabled) {
+  background: rgba(16,185,129,0.2);
+  border-color: rgba(16,185,129,0.5);
+}
+.cn-action-delete {
+  background: rgba(239,68,68,0.1);
+  border-color: rgba(239,68,68,0.25);
+  color: #fca5a5;
+  flex: 1;
+}
+.cn-action-delete:hover:not(:disabled) {
+  background: rgba(239,68,68,0.2);
+  border-color: rgba(239,68,68,0.45);
+}
+.cn-action-move {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.5);
+  padding: 7px 10px;
+}
+.cn-action-move:hover:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.25);
+  color: #fff;
+}
+
+/* ── 슬라이드 패널 이동 버튼 ──────────────────────────────────── */
+.cn-thumb-move-btns {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 150ms;
+}
+.cn-thumb.active .cn-thumb-move-btns { opacity: 1; }
+.cn-thumb-move {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+  transition: all 120ms;
+  padding: 0;
+}
+.cn-thumb-move:hover:not(:disabled) {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+.cn-thumb-move:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+
+/* ── 토글 스위치 (자막/오버레이) ──────────────────────────────── */
+.cn-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cn-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms;
+}
+.cn-toggle-row:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+}
+.cn-toggle-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+}
+.cn-toggle-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  cursor: pointer;
+  transition: background 200ms;
+  padding: 0;
+  flex-shrink: 0;
+}
+.cn-toggle-switch.active {
+  background: #10b981;
+}
+.cn-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform 200ms;
+}
+.cn-toggle-switch.active .cn-toggle-knob {
+  transform: translateX(16px);
+}

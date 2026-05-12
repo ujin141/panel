@@ -13,6 +13,7 @@ export function middleware(request: NextRequest) {
     pathname === '/signup' ||
     pathname.startsWith('/api/auth/pin') ||
     pathname.startsWith('/api/template-preview') ||
+    pathname.startsWith('/api/short-form') ||   // 숏폼 생성/추천 — 인증 불필요
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon');
 

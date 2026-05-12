@@ -33,6 +33,14 @@ async function generateSlides(topic: string, category: string, brandName: string
 현재 날짜: ${currentDate}. 모든 정보는 최신 기준이어야 합니다.
 반드시 JSON 형식으로만 응답하세요.
 
+⚠️ [팩트체크 필수 규칙]:
+- 매장명, 주소, 위치, 메뉴, 가격 등 구체적 정보는 반드시 실제로 존재하고 검증된 것만 작성하세요.
+- 확실하지 않은 가게 이름이나 주소는 절대 지어내지 마세요.
+- 위치를 쓸 때는 "성수동", "을지로" 같은 동네 단위까지만 쓰고, 정확하지 않은 상세 주소는 생략하세요.
+- 메뉴나 가격은 대략적인 범위("1만원대", "런치 2만원 내외")로만 표현하세요.
+- 존재가 불확실한 특정 매장명 대신, 일반적인 팁/기준/선택법 위주로 작성하세요.
+- "~로 알려진", "~라고 함" 같은 불확실한 표현 금지. 확실한 팩트만 쓰세요.
+
 법칙:
 1. 커버: 스크롤을 멈추는 극단적 훅 ("99%가 속고 있는", "제발 OOO 하지 마세요")
 2. 본문: 희귀 정보, 뼈때리는 팩트를 이모지 리스트로
@@ -53,6 +61,14 @@ JSON 형식:
   const sysPromptEn = `You are a top global Instagram growth hacker dominating the algorithm.
 Current date: ${currentDate}. All information must be up-to-date.
 Respond strictly in JSON format.
+
+⚠️ [FACT-CHECK RULES - MANDATORY]:
+- Only include store names, addresses, locations, menus, and prices that are VERIFIED and REAL.
+- NEVER fabricate or guess specific business names, addresses, or location details.
+- For locations, use neighborhood-level names only (e.g., "Seongsu-dong", "Gangnam area") — do NOT invent specific addresses.
+- For prices, use approximate ranges (e.g., "around $15", "lunch under $20").
+- When unsure about a specific business, provide general tips/criteria/selection guides instead.
+- NEVER use hedging phrases like "reportedly" or "said to be" — only state verified facts.
 
 Rules:
 1. Cover: Extreme scroll-stopping hook (e.g., "99% of people do this wrong", "Stop doing OOO right now")
@@ -88,7 +104,7 @@ Brand Name: ${brandName}
 ${slideCountInstruction}
 
 Calculate "tag" exactly as "current number / total slides".
-Include specific real-world information and numbers for each item.` 
+IMPORTANT: Do NOT invent specific business names or addresses. Only mention places you are absolutely certain exist.` 
 : 
 `주제: "${topic}"
 카드뉴스 유형: ${instruction}
@@ -97,10 +113,10 @@ Include specific real-world information and numbers for each item.`
 ${slideCountInstruction}
 
 tag는 "현재번호 / 총슬라이드수" 형식으로 정확히 계산해서 넣어.
-각 장소/항목마다 구체적인 실제 정보+수치를 포함해줘.`,
+중요: 특정 매장명이나 주소를 지어내지 마. 장소를 언급할 때는 확실히 존재하는 것만 써. 잘 모르면 동네 특징이나 고르는 팁 위주로 작성해.`,
       },
     ],
-    temperature: 0.9,
+    temperature: 0.6,
     max_tokens: 4000,
   });
 
@@ -121,6 +137,7 @@ async function generateCaption(topic: string, category: string, brandName: strin
   };
 
   const sysPromptKo = `당신은 대한민국 1위 바이럴 마케터입니다. 반드시 JSON 형식으로만 응답하세요.
+⚠️ 캡션에 특정 매장명/주소/가격을 쓸 때는 확실히 실제 존재하는 정보만 쓰세요. 모르면 일반적 표현으로 대체하세요.
 
 {
   "caption": "[첫줄 훅]\\n\\n[핵심 가치]\\n\\n🎁 댓글에 'OO'이라고 남겨주시면 DM으로 링크 드려요!\\n\\n🔖 지금 바로 저장!\\n👉 @{브랜드명} 팔로우",
@@ -128,6 +145,7 @@ async function generateCaption(topic: string, category: string, brandName: strin
 }`;
 
   const sysPromptEn = `You are a top global viral marketer. Respond strictly in JSON format.
+⚠️ When writing captions, ONLY include specific store names/addresses/prices that are VERIFIED and REAL. If unsure, use general descriptions instead.
 
 {
   "caption": "[Scroll-stopping hook]\\n\\n[Core value/Information]\\n\\n🎁 Comment 'OO' and I'll DM you the link!\\n\\n🔖 Save this post right now!\\n👉 Follow @{brandName} for more",
@@ -144,7 +162,8 @@ async function generateCaption(topic: string, category: string, brandName: strin
 Category: ${category}
 Brand Name: ${brandName}
 
-Write an engaging Instagram caption that drives comments (Auto-DM), saves, and follows, along with 18-20 highly relevant hashtags.`;
+Write an engaging Instagram caption that drives comments (Auto-DM), saves, and follows, along with 18-20 highly relevant hashtags.
+IMPORTANT: Do NOT fabricate specific place names, addresses, or prices. Only mention verified, real information.`;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -152,7 +171,7 @@ Write an engaging Instagram caption that drives comments (Auto-DM), saves, and f
       { role: 'system', content: language === 'en' ? sysPromptEn.replace('{brandName}', brandName) : sysPromptKo.replace('{브랜드명}', brandName) },
       { role: 'user', content: language === 'en' ? userPromptEn : userPromptKo },
     ],
-    temperature: 0.85,
+    temperature: 0.6,
     max_tokens: 700,
   });
 
