@@ -403,7 +403,7 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
 }
 
 // 실시간 트렌드 허브 타입
-type TrendCardTopic = { rank:number; keyword:string; hook:string; hotScore:number; estimatedViews:string; saves:string; reason:string; hashtags:string[]; source:string; category:string; urgency:string; };
+type TrendCardTopic = { rank:number; keyword:string; hook:string; hotScore:number; estimatedViews:string; saves:string; reason:string; hashtags:string[]; source:string; category:string; urgency:string; viralFormula?:string; crossSourceCount?:number; trafficWindow?:string; psychTrigger?:string; bestPostingTime?:string; };
 type TrendAiTopic   = { rank:number; keyword:string; searchVolume:string; competition:string; hotScore:number; reason:string; longtailKeywords:string[]; contentAngle:string; source:string; category:string; };
 type TrendHubData   = { cardTopics: TrendCardTopic[]; aiWritingTopics: TrendAiTopic[]; realtime?: boolean; fetchedCount?: number; fetchedAt?: string; };
 
@@ -528,10 +528,12 @@ export default function CardNewsPage() {
   const handleTrendHub = async (overrideCat?: string, overridePlatform?: string) => {
     const cat = overrideCat ?? trendHubCategory;
     const plat = overridePlatform ?? trendHubPlatform;
+    // TikTok은 무조건 해외 글로벌 → lang 강제로 en
+    const effectiveLang = plat === 'tiktok' ? 'en' : language;
     setTrendHubLoading(true);
     setTrendHub(null);
     try {
-      const res = await fetch(`/api/trending-topics?category=${cat === 'all' ? '' : cat}&mode=all&lang=${language}&platform=${plat}&t=${Date.now()}`);
+      const res = await fetch(`/api/trending-topics?category=${cat === 'all' ? '' : cat}&mode=all&lang=${effectiveLang}&platform=${plat}&t=${Date.now()}`);
       const data = await res.json();
       setTrendHub(data);
     } catch (e: any) {
@@ -1169,6 +1171,26 @@ export default function CardNewsPage() {
                   ))}
                 </div>
 
+                {/* TikTok 선택 시 글로벌 타깃 안내 배지 */}
+                {trendHubPlatform === 'tiktok' && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10,
+                    padding: '8px 14px', borderRadius: 10,
+                    background: 'linear-gradient(90deg, rgba(0,173,181,0.15), rgba(0,255,150,0.08))',
+                    border: '1px solid rgba(0,220,130,0.35)',
+                  }}>
+                    <span style={{ fontSize: 16 }}>🌍</span>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: '#6ee7b7', letterSpacing: '0.02em' }}>
+                        Global English Only — US · UK · AU · CA · EU
+                      </div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
+                        TikTok은 무조건 해외 영어권 타깃 · 한국어 소스 자동 제외 · FYP 바이럴 포맷 적용
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* 카테고리 필터 */}
                 <div style={{ marginBottom: 12 }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 }}>{isEn ? 'Select Category' : '카테고리 선택'}</p>
@@ -1206,6 +1228,7 @@ export default function CardNewsPage() {
 
                 {/* 허브 실행 버튼 */}
                 <button
+                  id="trendHubFetchBtn"
                   onClick={() => handleTrendHub()}
                   disabled={trendHubLoading}
                   style={{
@@ -1221,7 +1244,7 @@ export default function CardNewsPage() {
                   onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
                 >
                   {trendHubLoading ? (
-                    <><div className="spinner" />{isEn ? 'Collecting Google News & Trends...' : '구글 뉴스·트렌드 실시간 수집 중...'}</>
+                    <><div className="spinner" />{'🔥 Google Trends+9개 소스 실시간 수집 중...'}</>
                   ) : (
                     <>{trendHubPlatform === 'tiktok' ? '🎵' : '📸'} {trendHubCategory === 'all' ? (isEn ? 'All' : '전체') : [
                       { id: 'travel', label: '여행/맛집', labelEn: 'Travel/Food' }, { id: 'beauty', label: '뷰티/패션', labelEn: 'Beauty/Fashion' },
@@ -1277,6 +1300,23 @@ export default function CardNewsPage() {
                           {new Date(trendHub.fetchedAt).toLocaleTimeString(isEn ? 'en-US' : 'ko-KR', { hour: '2-digit', minute: '2-digit' })} {isEn ? 'updated' : '기준'}
                         </span>
                       )}
+                      {/* 🔄 새 주제 탐색 버튼 */}
+                      <button
+                        onClick={() => { setTrendHub(null); setTimeout(() => { const btn = document.getElementById('trendHubFetchBtn'); if (btn) btn.click(); }, 50); }}
+                        disabled={trendHubLoading}
+                        style={{
+                          marginLeft: 'auto', padding: '4px 12px', fontSize: 11, fontWeight: 800,
+                          borderRadius: 20, border: '1px solid rgba(139,92,246,0.5)',
+                          background: 'rgba(139,92,246,0.15)', color: '#c4b5fd',
+                          cursor: trendHubLoading ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', gap: 5,
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => { if (!trendHubLoading) { e.currentTarget.style.background = 'rgba(139,92,246,0.3)'; e.currentTarget.style.transform = 'scale(1.05)'; } }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.15)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                      >
+                        🔄 {isEn ? 'New Topics' : '새 주제 탐색'}
+                      </button>
                     </div>
 
                     {/* 탭 전환 */}
@@ -1372,6 +1412,76 @@ export default function CardNewsPage() {
                                 <span key={ti} style={{ fontSize: 10, color: '#818cf8', background: 'rgba(129,140,248,0.1)', padding: '2px 7px', borderRadius: 20, border: '1px solid rgba(129,140,248,0.2)', fontWeight: 600 }}>{tag}</span>
                               ))}
                             </div>
+
+                            {/* 바이럴 공식 + 크로스소스 신호 */}
+                            {(item.viralFormula || (item.crossSourceCount != null && item.crossSourceCount > 0)) && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                                {item.viralFormula && (
+                                  <div style={{
+                                    fontSize: 10, fontWeight: 800, letterSpacing: '0.04em',
+                                    padding: '3px 10px', borderRadius: 20,
+                                    background: 'rgba(168,85,247,0.18)', color: '#d8b4fe',
+                                    border: '1px solid rgba(168,85,247,0.35)',
+                                  }}>
+                                    {item.viralFormula === '숫자형' ? '🔢' : item.viralFormula === '비교형' ? '⚔️' : item.viralFormula === '비밀형' ? '🔒' : item.viralFormula === '경고형' ? '⚠️' : '💬'} {item.viralFormula}
+                                  </div>
+                                )}
+                                {item.crossSourceCount != null && item.crossSourceCount > 0 && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>{isEn ? 'Cross-signal' : '크로스신호'}</span>
+                                    {[1,2,3,4,5].map(d => (
+                                      <div key={d} style={{
+                                        width: 12, height: 6, borderRadius: 2,
+                                        background: d <= (item.crossSourceCount ?? 0)
+                                          ? d <= 2 ? '#10b981' : d <= 4 ? '#f59e0b' : '#ef4444'
+                                          : 'rgba(255,255,255,0.1)',
+                                        transition: 'all 0.2s',
+                                      }} />
+                                    ))}
+                                    <span style={{ fontSize: 10, fontWeight: 800, color: (item.crossSourceCount ?? 0) >= 3 ? '#fca5a5' : (item.crossSourceCount ?? 0) >= 2 ? '#fcd34d' : '#6ee7b7' }}>
+                                      {item.crossSourceCount}개 소스
+                                    </span>
+                                  </div>
+                                )}
+                                {item.trafficWindow && (
+                                  <div style={{
+                                    fontSize: 10, fontWeight: 700,
+                                    padding: '3px 8px', borderRadius: 20,
+                                    background: item.trafficWindow === '즉시' ? 'rgba(239,68,68,0.15)' : item.trafficWindow === '이번주' ? 'rgba(245,158,11,0.15)' : 'rgba(100,100,100,0.15)',
+                                    color: item.trafficWindow === '즉시' ? '#fca5a5' : item.trafficWindow === '이번주' ? '#fcd34d' : '#9ca3af',
+                                    border: `1px solid ${item.trafficWindow === '즉시' ? 'rgba(239,68,68,0.35)' : item.trafficWindow === '이번주' ? 'rgba(245,158,11,0.35)' : 'rgba(100,100,100,0.3)'}`,
+                                  }}>
+                                    ⏱ {isEn ? 'Window' : '타이밍'}: {item.trafficWindow}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* 심리 트리거 + 최적 업로드 타임 */}
+                            {(item.psychTrigger || item.bestPostingTime) && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                                {item.psychTrigger && (
+                                  <div style={{
+                                    fontSize: 10, fontWeight: 800,
+                                    padding: '3px 10px', borderRadius: 20,
+                                    background: 'rgba(6,182,212,0.15)', color: '#67e8f9',
+                                    border: '1px solid rgba(6,182,212,0.35)',
+                                  }}>
+                                    🧠 {item.psychTrigger}
+                                  </div>
+                                )}
+                                {item.bestPostingTime && (
+                                  <div style={{
+                                    fontSize: 10, fontWeight: 800,
+                                    padding: '3px 10px', borderRadius: 20,
+                                    background: 'rgba(16,185,129,0.15)', color: '#6ee7b7',
+                                    border: '1px solid rgba(16,185,129,0.35)',
+                                  }}>
+                                    📅 {item.bestPostingTime}
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
                             {/* 클릭 힌트 */}
                             <div style={{ position: 'absolute', bottom: 10, right: 12, fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>{isEn ? 'Tap to select topic →' : '탭하면 주제로 선택 →'}</div>

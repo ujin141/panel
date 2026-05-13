@@ -48,66 +48,67 @@ async function generateSlides(topic: string, category: string, brandName: string
     ? `⚠️ [필수] 주제에 "${requestedCount}"가 명시되어 있으므로 반드시 본문 슬라이드 ${bodySlides}개를 생성하세요. 총 ${totalSlides}장 (커버1 + 본문${bodySlides} + CTA1). / Must generate ${bodySlides} body slides. Total ${totalSlides} slides.`
     : `슬라이드는 커버 1장 + 본문 3장 + CTA 1장 = 총 5장으로 구성하세요. / Slides must be: 1 Cover + 3 Body + 1 CTA = Total 5 slides.`;
 
-  const sysPromptKo = `당신은 대한민국 인스타그램 카드뉴스 트래픽을 지배하는 최고의 알고리즘 해커입니다.
-현재 날짜: ${currentDate}. 모든 정보는 최신 기준이어야 합니다.
+  const sysPromptKo = `당신은 대한민국 인스타그램 저장수·조회수 폭발을 전문으로 하는 최상위 알고리즘 해커입니다.
+현재 날짜: ${currentDate}
 반드시 JSON 형식으로만 응답하세요.
 
-⚠️ [팩트체크 필수 규칙]:
-- 매장명, 주소, 위치, 메뉴, 가격 등 구체적 정보는 반드시 실제로 존재하고 검증된 것만 작성하세요.
-- 확실하지 않은 가게 이름이나 주소는 절대 지어내지 마세요.
-- 위치를 쓸 때는 "성수동", "을지로" 같은 동네 단위까지만 쓰고, 정확하지 않은 상세 주소는 생략하세요.
-- 메뉴나 가격은 대략적인 범위("1만원대", "런치 2만원 내외")로만 표현하세요.
-- 존재가 불확실한 특정 매장명 대신, 일반적인 팁/기준/선택법 위주로 작성하세요.
-- "~로 알려진", "~라고 함" 같은 불확실한 표현 금지. 확실한 팩트만 쓰세요.
+## 7대 뇌과학 바이럴 슬라이드 공식 (반드시 적용)
+1. [커버] 손실 혐오 훅: "이거 모르면 X만원 손해", "지금 당장 멈춰야 할 OO", "99%가 모르는" → 뇌는 손실에 2.5배 반응
+2. [슬라이드2] 호기심 격차 증폭: 문제를 먼저 던지고 해결책은 다음 슬라이드에 → 끝까지 읽게 만듦
+3. [본문] 숫자 구체성: "3가지", "7분", "월 47만원" 같은 구체적 숫자 → 신뢰도 300% 상승
+4. [본문] 이모지 리스트: 한 포인트당 한 줄 (20자 이내), 빠른 스캔 가능하게
+5. [마지막 본문] 사회적 증거: "이미 XX명이 실천 중", "전문가도 추천하는" 문구
+6. [CTA] 저장 압박: "지금 저장 안 하면 다시 못 찾아요" → FOMO 자극
+7. [CTA] 팔로우 이유: "@브랜드 팔로우하면 이런 꿀팁 매주 받아요" → 즉각적 가치 제시
 
-법칙:
-1. 커버: 스크롤을 멈추는 극단적 훅 ("99%가 속고 있는", "제발 OOO 하지 마세요")
-2. 본문: 희귀 정보, 뼈때리는 팩트를 이모지 리스트로
-3. 각 포인트는 20자 이내
-4. 마지막: "까먹기 전에 무조건 저장🔖"
-5. CTA: "@계정명 팔로우"로 압박
-6. 줄바꿈은 \\n으로
+## 슬라이드 구조 공식
+- 커버(1장): 극강 훅 제목 + 빈 본문 (이미지가 전부)
+- 본문(N장): 제목=핵심 포인트, 본문=구체 팩트 3~5개 (이모지 리스트)
+- CTA(1장): 저장+팔로우 압박 (댓글 DM 유도 포함)
+
+## 팩트체크 규칙 (위반 시 콘텐츠 신뢰도 붕괴)
+- 확인 불가 매장명·주소·가격 절대 금지
+- 불확실한 정보는 "~대", "~내외" 같은 범위 표현 사용
+- 존재 불명확 장소 → 동네 단위(성수동, 을지로)까지만
 
 JSON 형식:
 {
   "slides": [
-    { "id": "1", "title": "훅\\n부제", "body": "", "tag": "01 / N" },
-    { "id": "2", "title": "정보1", "body": "🚨 팩트1\\n✅ 팩트2\\n💡 꿀팁", "tag": "02 / N", "number": "01" },
-    { "id": "N", "title": "저장 안 하면\\n100% 후회합니다 🔖", "body": "💾 지금 바로 저장\\n👉 팔로우하고 꿀팁 받기", "tag": "N / N" }
+    { "id": "1", "title": "스크롤 멈추는\\n극강 훅 제목", "body": "", "tag": "01 / N" },
+    { "id": "2", "title": "핵심 포인트 제목", "body": "🚨 충격 팩트 (구체적 숫자 포함)\\n✅ 즉시 써먹는 방법\\n💡 아무도 안 알려준 꿀팁\\n🔑 전문가 비결", "tag": "02 / N", "number": "01" },
+    { "id": "N", "title": "저장 안 하면\\n진짜 후회합니다 🔖", "body": "💾 지금 바로 저장 필수\\n🎁 댓글에 '정보' → DM으로 링크 드려요\\n👉 팔로우하고 매주 꿀팁 받기", "tag": "N / N" }
   ]
 }`;
 
-  const sysPromptEn = `You are a top global Instagram growth hacker dominating the algorithm.
+  const sysPromptEn = `You are a top global Instagram growth hacker specializing in maximizing saves and reach.
 Current date: ${currentDate}. All information must be up-to-date.
 Respond strictly in JSON format.
 
-⚠️ [FACT-CHECK RULES - MANDATORY]:
-- Only include store names, addresses, locations, menus, and prices that are VERIFIED and REAL.
-- NEVER fabricate or guess specific business names, addresses, or location details.
-- For locations, use neighborhood-level names only (e.g., "Seongsu-dong", "Gangnam area") — do NOT invent specific addresses.
-- For prices, use approximate ranges (e.g., "around $15", "lunch under $20").
-- When unsure about a specific business, provide general tips/criteria/selection guides instead.
-- NEVER use hedging phrases like "reportedly" or "said to be" — only state verified facts.
+## 7 Neuro-Science Viral Slide Rules (MANDATORY)
+1. [Cover] Loss Aversion Hook: "Stop doing OOO", "You're losing $X not knowing this" → Brain responds 2.5x stronger to loss
+2. [Slide 2] Curiosity Gap: Raise the problem first, deliver solution on next slide → forces people to keep reading
+3. [Body] Specificity: Use concrete numbers — "3 steps", "saves $470/month", "7 minutes" → trust jumps 300%
+4. [Body] Emoji List: One point per line (under 50 chars), easy to scan
+5. [Last Body] Social Proof: "Already used by XX people", "Experts recommend this" phrasing
+6. [CTA] Save Urgency: "Save now or you'll never find this again" → triggers FOMO
+7. [CTA] Follow Value: "Follow @brand for weekly tips like this" → immediate value proposition
 
-Rules:
-1. Cover: Extreme scroll-stopping hook (e.g., "99% of people do this wrong", "Stop doing OOO right now")
-2. Body: Rare info, hard-hitting facts as an emoji list.
-3. Keep points under 50 characters.
-4. Last slide: "Save this before you forget 🔖"
-5. CTA: Push to "Follow @accountname"
-6. Use \\n for line breaks.
+## FACT-CHECK RULES (MANDATORY)
+- NEVER fabricate store names, addresses, or exact prices
+- Use ranges for prices: "around $15", "under $20/month"
+- For locations: neighborhood level only
 
 JSON format:
 {
   "slides": [
     { "id": "1", "title": "Hook\\nSubtitle", "body": "", "tag": "01 / N" },
-    { "id": "2", "title": "Info 1", "body": "🚨 Fact 1\\n✅ Fact 2\\n💡 Pro tip", "tag": "02 / N", "number": "01" },
-    { "id": "N", "title": "You will regret\\nif you don't save this 🔖", "body": "💾 Save for later\\n👉 Follow for more tips", "tag": "N / N" }
+    { "id": "2", "title": "Key Point Title", "body": "🚨 Shocking fact (with specific number)\\n✅ Actionable right now\\n💡 Secret nobody tells you\\n🔑 Expert-level insight", "tag": "02 / N", "number": "01" },
+    { "id": "N", "title": "Save this or\\nyou WILL regret it 🔖", "body": "💾 Save right now\\n🎁 Comment 'INFO' → I'll DM the link\\n👉 Follow for weekly tips", "tag": "N / N" }
   ]
 }`;
 
   const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     messages: [
       {
         role: 'system',
@@ -123,7 +124,8 @@ Brand Name: ${brandName}
 ${slideCountInstruction}
 
 Calculate "tag" exactly as "current number / total slides".
-IMPORTANT: Do NOT invent specific business names or addresses. Only mention places you are absolutely certain exist.` 
+Apply ALL 7 viral rules. Make every slide scroll-stopping. Be specific with numbers.
+Never invent specific business names or addresses.` 
 : 
 `주제: "${topic}"
 카드뉴스 유형: ${instruction}
@@ -131,11 +133,12 @@ IMPORTANT: Do NOT invent specific business names or addresses. Only mention plac
 
 ${slideCountInstruction}
 
-tag는 "현재번호 / 총슬라이드수" 형식으로 정확히 계산해서 넣어.
-중요: 특정 매장명이나 주소를 지어내지 마. 장소를 언급할 때는 확실히 존재하는 것만 써. 잘 모르면 동네 특징이나 고르는 팁 위주로 작성해.`,
+tag는 "현재번호 / 총슬라이드수" 형식으로 정확히 계산.
+7대 바이럴 규칙 전부 적용. 숫자를 구체적으로 써서 신뢰도 높이기.
+매장명·주소 지어내지 말 것.`,
       },
     ],
-    temperature: 0.6,
+    temperature: 0.85,
     max_tokens: 4000,
   });
 
@@ -155,20 +158,52 @@ async function generateCaption(topic: string, category: string, brandName: strin
     howto: '단계별 안내, 친절한 톤으로',
   };
 
-  const sysPromptKo = `당신은 대한민국 1위 바이럴 마케터입니다. 반드시 JSON 형식으로만 응답하세요.
-⚠️ 캡션에 특정 매장명/주소/가격을 쓸 때는 확실히 실제 존재하는 정보만 쓰세요. 모르면 일반적 표현으로 대체하세요.
+  const sysPromptKo = `당신은 대한민국 SNS 바이럴 마케팅 1위 전문가입니다. 반드시 JSON 형식으로만 응답하세요.
+댓글·저장·팔로우를 동시에 폭발시키는 캡션과 해시태그를 작성합니다.
+
+## 캡션 공식 (순서 준수)
+1. 첫줄: 스크롤 멈추는 훅 ("이거 모르면 진짜 손해", "솔직히 충격받았어요")
+2. 공백 한 줄
+3. 핵심 가치 2~3문장 (읽는 즉시 저장 욕구 발생)
+4. 공백 한 줄
+5. 댓글 DM 유도: "댓글에 'OO' 남기면 → DM으로 [구체적 혜택] 드려요!"
+6. 공백 한 줄
+7. 저장 압박 + 팔로우 이유 제시
+
+## 해시태그 전략 (20개)
+- 인기 태그 5개 (#꿀팁 #정보공유 #저장필수 등)
+- 중간 태그 10개 (주제 관련 구체적)
+- 틈새 태그 5개 (롱테일, 경쟁 낮은 것)
+
+⚠️ 캡션에 검증 안 된 매장명·주소·가격 절대 금지. 불확실하면 일반 표현 사용.
 
 {
-  "caption": "[첫줄 훅]\\n\\n[핵심 가치]\\n\\n🎁 댓글에 'OO'이라고 남겨주시면 DM으로 링크 드려요!\\n\\n🔖 지금 바로 저장!\\n👉 @{브랜드명} 팔로우",
-  "hashtags": ["태그1", "태그2"]
+  "caption": "첫줄 훅\\n\\n핵심 가치 설명\\n\\n🎁 댓글에 'OO' 남기시면 DM으로 [혜택] 드려요!\\n\\n🔖 지금 저장 안 하면 나중에 못 찾아요\\n👉 @{브랜드명} 팔로우하면 매주 이런 꿀팁 드려요",
+  "hashtags": ["태그1", "태그2", "...(총 20개)"]
 }`;
 
-  const sysPromptEn = `You are a top global viral marketer. Respond strictly in JSON format.
-⚠️ When writing captions, ONLY include specific store names/addresses/prices that are VERIFIED and REAL. If unsure, use general descriptions instead.
+  const sysPromptEn = `You are a top global viral Instagram marketer. Respond strictly in JSON format.
+Write captions and hashtags that maximize comments, saves, and follows simultaneously.
+
+## Caption Formula (follow this order)
+1. First line: Scroll-stopping hook ("You're losing money not knowing this", "This honestly shocked me")
+2. Empty line
+3. Core value 2-3 sentences (creates instant urge to save)
+4. Empty line
+5. Comment DM bait: "Comment 'INFO' below → I'll DM you [specific benefit]!"
+6. Empty line
+7. Save urgency + follow value proposition
+
+## Hashtag Strategy (20 tags)
+- 5 popular tags (#tips #savethis #lifehacks etc.)
+- 10 mid-range topic-specific tags
+- 5 niche long-tail tags (low competition)
+
+⚠️ Never include unverified store names, addresses, or prices.
 
 {
-  "caption": "[Scroll-stopping hook]\\n\\n[Core value/Information]\\n\\n🎁 Comment 'OO' and I'll DM you the link!\\n\\n🔖 Save this post right now!\\n👉 Follow @{brandName} for more",
-  "hashtags": ["tag1", "tag2"]
+  "caption": "Hook line\\n\\nCore value explanation\\n\\n🎁 Comment 'INFO' below → I'll DM you [benefit]!\\n\\n🔖 Save this now or you'll never find it again\\n👉 Follow @{brandName} for weekly tips like this",
+  "hashtags": ["tag1", "tag2", "...(20 total)"]
 }`;
 
   const userPromptKo = `주제: "${topic}"
@@ -190,8 +225,8 @@ IMPORTANT: Do NOT fabricate specific place names, addresses, or prices. Only men
       { role: 'system', content: language === 'en' ? sysPromptEn.replace('{brandName}', brandName) : sysPromptKo.replace('{브랜드명}', brandName) },
       { role: 'user', content: language === 'en' ? userPromptEn : userPromptKo },
     ],
-    temperature: 0.6,
-    max_tokens: 700,
+    temperature: 0.75,
+    max_tokens: 1000,
   });
 
   const raw = completion.choices[0].message.content ?? '{}';
