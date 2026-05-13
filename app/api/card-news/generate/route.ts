@@ -19,14 +19,33 @@ async function generateSlides(topic: string, category: string, brandName: string
   const instruction = categoryTranslations[category] || category;
   const currentDate = new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // 주제에서 숫자 추출
-  const countMatch = topic.match(/(\d+)\s*(곳|가지|개|군데|장소|맛집|카페|명소|핫플|레스토랑|스팟|방법|단계|스텝|ways|tips|places|things|steps)/i);
-  const requestedCount = countMatch ? parseInt(countMatch[1]) : null;
+  // 주제에서 숫자 추출 (2~20 범위만 유효)
+  // 패턴1: 숫자 + 단위어 (e.g. "5가지", "7곳")
+  // 패턴2: BEST/TOP + 숫자 (e.g. "BEST 9", "TOP 5")
+  // 패턴3: 숫자 + BEST/TOP (e.g. "9 BEST")
+  // 패턴4: 주제 내 단독 숫자 (e.g. "성수동 맛집 9")
+  const extractCount = (t: string): number | null => {
+    const patterns = [
+      /(\d+)\s*(?:곳|가지|개|군데|장소|맛집|카페|명소|핫플|레스토랑|스팟|방법|단계|스텝|ways|tips|places|things|steps)/i,
+      /(?:BEST|TOP|추천|필수|꿀팁|best|top)\s*(\d+)/i,
+      /(\d+)\s*(?:BEST|TOP|best|top)/i,
+      /\b(\d+)\b/,
+    ];
+    for (const re of patterns) {
+      const m = t.match(re);
+      if (m) {
+        const n = parseInt(m[1]);
+        if (n >= 2 && n <= 20) return n;
+      }
+    }
+    return null;
+  };
+  const requestedCount = extractCount(topic);
   const totalSlides = requestedCount ? requestedCount + 2 : 5;
   const bodySlides = requestedCount || 3;
 
   const slideCountInstruction = requestedCount
-    ? `⚠️ [필수] 주제에 "${countMatch![0]}"가 명시되어 있으므로 반드시 본문 슬라이드 ${bodySlides}개를 생성하세요. 총 ${totalSlides}장 (커버1 + 본문${bodySlides} + CTA1). / Must generate ${bodySlides} body slides. Total ${totalSlides} slides.`
+    ? `⚠️ [필수] 주제에 "${requestedCount}"가 명시되어 있으므로 반드시 본문 슬라이드 ${bodySlides}개를 생성하세요. 총 ${totalSlides}장 (커버1 + 본문${bodySlides} + CTA1). / Must generate ${bodySlides} body slides. Total ${totalSlides} slides.`
     : `슬라이드는 커버 1장 + 본문 3장 + CTA 1장 = 총 5장으로 구성하세요. / Slides must be: 1 Cover + 3 Body + 1 CTA = Total 5 slides.`;
 
   const sysPromptKo = `당신은 대한민국 인스타그램 카드뉴스 트래픽을 지배하는 최고의 알고리즘 해커입니다.

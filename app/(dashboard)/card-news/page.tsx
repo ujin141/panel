@@ -170,10 +170,10 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
         </>
       )}
 
-      {/* 상단 브랜드 배지 */}
+      {/* 상단 브랜드 배지 - 릴스 상단 UI 고려: top 65px */}
       {!hideText && (
       <div style={{
-        position: 'absolute', top: 20, left: 20, zIndex: 3,
+        position: 'absolute', top: '8%', left: '8%', zIndex: 3,
         display: 'flex', alignItems: 'center', gap: 7,
       }}>
         <div style={{
@@ -181,8 +181,8 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
           backdropFilter: 'blur(8px)',
           border: coverImageUrl ? '1px solid rgba(255,255,255,0.5)' : `1px solid ${t.accentDot || 'rgba(255,255,255,0.3)'}`,
           borderRadius: 999,
-          padding: '10px 22px',
-          fontSize: 20, fontWeight: 900,
+          padding: '6px 14px',
+          fontSize: 13, fontWeight: 900,
           color: '#fff',
           letterSpacing: '0.05em',
           textTransform: 'uppercase',
@@ -193,9 +193,9 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
       </div>
       )}
 
-      {/* 하단 제목 영역 */}
+      {/* 하단 제목 영역 - 릴스 하단 UI 고려: bottom 120px */}
       {!hideText && (
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '40px 24px 48px', zIndex: 3 }}>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '3% 15% 35% 8%', zIndex: 3 }}>
         {t.accentDot && !coverImageUrl && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: t.accentDot }} />
@@ -203,18 +203,18 @@ function CoverCard({ slide, theme, brandName, topic, coverImageUrl, hideText, hi
           </div>
         )}
         <div style={{
-          fontSize: 52, fontWeight: 900, lineHeight: 1.25, whiteSpace: 'pre-line',
+          fontSize: 38, fontWeight: 900, lineHeight: 1.25, whiteSpace: 'pre-line',
           letterSpacing: '-0.03em',
           color: coverImageUrl ? '#fff' : (t.isDark ? '#fff' : '#111'),
-          textShadow: coverImageUrl ? '0 2px 24px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)' : 'none',
-          marginBottom: 16,
+          textShadow: coverImageUrl ? '0 2px 24px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.7)' : 'none',
+          marginBottom: 12,
           wordBreak: 'keep-all',
         }}>
           {slide.title || 'Card Title'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ height: 3, width: 32, background: coverImageUrl ? 'rgba(255,255,255,0.6)' : (t.accentDot || 'rgba(255,255,255,0.4)'), borderRadius: 1 }} />
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: coverImageUrl ? 'rgba(255,255,255,0.7)' : (t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)') }}>01 / 05</div>
+          <div style={{ height: 3, width: 28, background: coverImageUrl ? 'rgba(255,255,255,0.6)' : (t.accentDot || 'rgba(255,255,255,0.4)'), borderRadius: 1 }} />
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', color: coverImageUrl ? 'rgba(255,255,255,0.7)' : (t.isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)') }}>01 / 05</div>
         </div>
       </div>
       )}
@@ -242,9 +242,9 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
       width: '100%', aspectRatio: '9 / 16', borderRadius: 16,
       position: 'relative', overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
-      justifyContent: isCenter ? 'center' : 'space-between',
+      justifyContent: isCenter ? 'center' : layout === 'title-top' ? 'flex-start' : layout === 'title-bottom' ? 'flex-end' : 'space-between',
       alignItems: isCenter ? 'center' : 'flex-start',
-      padding: '36px 24px', boxSizing: 'border-box',
+      padding: '8% 15% 35% 8%', boxSizing: 'border-box',
       textAlign: isCenter ? 'center' : 'left',
       background: coverImageUrl ? t.bg : t.bg,
     }}>
@@ -285,10 +285,10 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
       <div style={{ position: 'relative', zIndex: 1, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         {!isLast && slide.number && layout !== 'big-number' && (
           <div style={{
-            width: 56, height: 56, borderRadius: '50%',
+            width: 44, height: 44, borderRadius: '50%',
             background: numColor,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 26, fontWeight: 900, color: '#fff',
+            fontSize: 20, fontWeight: 900, color: '#fff',
             boxShadow: '0 2px 16px rgba(0,0,0,0.3)',
             flexShrink: 0,
           }}>
@@ -299,13 +299,13 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
           <div style={{ fontSize: 24 }}>🌟</div>
         )}
         <div style={{
-          fontSize: 20, fontWeight: 800, letterSpacing: '0.05em',
+          fontSize: 14, fontWeight: 800, letterSpacing: '0.05em',
           textTransform: 'uppercase',
           background: coverImageUrl ? 'rgba(0,0,0,0.35)' : (t.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.7)'),
           backdropFilter: coverImageUrl ? 'blur(8px)' : 'none',
           border: `1px solid ${coverImageUrl ? 'rgba(255,255,255,0.4)' : (t.accentDot || (t.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'))}`,
           borderRadius: 999,
-          padding: '8px 20px',
+          padding: '6px 14px',
           color: '#fff',
           marginLeft: 'auto',
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
@@ -319,21 +319,21 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
       {!hideText && (
       <div style={{ position: 'relative', zIndex: 1, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '10px 0' }}>
         {layout === 'big-number' && slide.number && (
-          <div style={{ fontSize: 130, fontWeight: 900, lineHeight: 0.85, color: coverImageUrl ? 'rgba(255,255,255,0.15)' : (t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'), marginBottom: 8, letterSpacing: '-0.05em' }}>{slide.number}</div>
+          <div style={{ fontSize: 100, fontWeight: 900, lineHeight: 0.85, color: coverImageUrl ? 'rgba(255,255,255,0.15)' : (t.isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'), marginBottom: 8, letterSpacing: '-0.05em' }}>{slide.number}</div>
         )}
         {layout === 'quote' && (
-          <div style={{ fontSize: 100, lineHeight: 0.7, color: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'), marginBottom: 14, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
+          <div style={{ fontSize: 80, lineHeight: 0.7, color: coverImageUrl ? 'rgba(255,255,255,0.2)' : (t.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'), marginBottom: 14, fontFamily: 'Georgia,serif' }}>&ldquo;</div>
         )}
         {slide.tag && (
-          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '0.12em', color: coverImageUrl ? 'rgba(255,255,255,0.6)' : t.accent, marginBottom: 16, textTransform: 'uppercase', opacity: 0.8 }}>{slide.tag}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', color: coverImageUrl ? 'rgba(255,255,255,0.6)' : t.accent, marginBottom: 12, textTransform: 'uppercase', opacity: 0.8 }}>{slide.tag}</div>
         )}
 
         <div style={{ marginBottom: slide.body ? 20 : 0 }}>
           <div style={{
-            fontSize: 42, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
+            fontSize: 32, fontWeight: 900, color: coverImageUrl ? '#fff' : t.text,
             lineHeight: 1.25, whiteSpace: 'pre-line',
             letterSpacing: '-0.02em',
-            textShadow: coverImageUrl ? '0 2px 20px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.5)' : 'none',
+            textShadow: coverImageUrl ? '0 2px 20px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.7)' : 'none',
             wordBreak: 'keep-all',
           }}>
             {slide.title || 'Slide Title'}
@@ -363,14 +363,14 @@ function InnerCard({ slide, theme, layout, index, total, brandName, coverImageUr
               );
               return (
                 <div key={li} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 12,
-                  fontSize: isListItem ? 24 : 22,
+                  display: 'flex', alignItems: 'flex-start', gap: isListItem ? 0 : 10,
+                  fontSize: isListItem ? 18 : 16,
                   fontWeight: isListItem ? 700 : 500,
                   lineHeight: 1.55,
                   color: coverImageUrl
                     ? (isListItem ? '#fff' : 'rgba(255,255,255,0.95)')
                     : (isListItem ? t.text : (t.isDark ? 'rgba(255,255,255,0.85)' : '#333')),
-                  textShadow: coverImageUrl ? '0 1px 10px rgba(0,0,0,0.7)' : 'none',
+                  textShadow: coverImageUrl ? '0 1px 10px rgba(0,0,0,0.8)' : 'none',
                   letterSpacing: '-0.01em',
                   wordBreak: 'keep-all',
                 }}>
@@ -439,7 +439,7 @@ export default function CardNewsPage() {
   const [slideHideText,    setSlideHideText]    = useState<boolean[]>([]);
   const [slideHideOverlay, setSlideHideOverlay] = useState<boolean[]>([]);
   const [pamphletUrl,      setPamphletUrl]      = useState<string | null>(null);
-  const [reelsDurationPerSlide, setReelsDurationPerSlide] = useState<number>(2000); // ms per slide
+  const [reelsDurationPerSlide, setReelsDurationPerSlide] = useState<number>(3000); // ms per slide
   const [trends, setTrends] = useState<Array<{topic:string;reason:string;hashtags:string[];hotScore:number;estimatedViews?:string;viewReason?:string;source?:string}>>([]);
   const [trendsLoading, setTrendsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<Array<{topic:string;reason:string;category:string;estimatedViews?:string;viralScore?:number;analysis?:string}>>([]);
@@ -450,6 +450,7 @@ export default function CardNewsPage() {
   const [trendHubLoading, setTrendHubLoading] = useState(false);
   const [trendHubTab, setTrendHubTab] = useState<'card' | 'ai'>('card');
   const [trendHubCategory, setTrendHubCategory] = useState<string>('all');
+  const [trendHubPlatform, setTrendHubPlatform] = useState<'instagram' | 'tiktok'>('instagram');
 
   const previewRef = useRef<HTMLDivElement>(null);
   const hiddenRenderRef = useRef<HTMLDivElement>(null);
@@ -524,12 +525,13 @@ export default function CardNewsPage() {
     }
   };
 
-  const handleTrendHub = async (overrideCat?: string) => {
+  const handleTrendHub = async (overrideCat?: string, overridePlatform?: string) => {
     const cat = overrideCat ?? trendHubCategory;
+    const plat = overridePlatform ?? trendHubPlatform;
     setTrendHubLoading(true);
     setTrendHub(null);
     try {
-      const res = await fetch(`/api/trending-topics?category=${cat === 'all' ? '' : cat}&mode=all&lang=${language}&t=${Date.now()}`);
+      const res = await fetch(`/api/trending-topics?category=${cat === 'all' ? '' : cat}&mode=all&lang=${language}&platform=${plat}&t=${Date.now()}`);
       const data = await res.json();
       setTrendHub(data);
     } catch (e: any) {
@@ -969,57 +971,53 @@ export default function CardNewsPage() {
         drawSingleSlide(sc, 1);
       };
 
-      // wall-clock 기반 대기 (setTimeout 누적 오차 방지)
-      const waitMs = (ms: number) => new Promise<void>(resolve => {
-        const start = performance.now();
-        const tick = () => {
-          if (performance.now() - start >= ms) resolve();
-          else requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-      });
+      // setTimeout 기반 대기 (rAF보다 브라우저 부하에 강함)
+      const waitMs = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
       const FRAME_MS = 1000 / 30; // ~33.33ms per frame
 
-      const crossfade = async (sc1: HTMLCanvasElement, sc2: HTMLCanvasElement, durationMs: number) => {
-        const start = performance.now();
-        let last = start;
-        while (true) {
-          const now = performance.now();
-          const elapsed = now - start;
-          if (elapsed >= durationMs) break;
+      const crossfade = (sc1: HTMLCanvasElement, sc2: HTMLCanvasElement, durationMs: number): Promise<void> =>
+        new Promise(resolve => {
+          const start = performance.now();
+          const interval = setInterval(() => {
+            const elapsed = performance.now() - start;
+            if (elapsed >= durationMs) {
+              clearInterval(interval);
+              ctx.globalAlpha = 1;
+              ctx.fillStyle = '#000';
+              ctx.fillRect(0, 0, 1080, 1920);
+              ctx.drawImage(sc2, 0, 0, 1080, 1920);
+              resolve();
+              return;
+            }
+            const alpha = elapsed / durationMs;
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 1080, 1920);
+            ctx.globalAlpha = 1 - alpha;
+            ctx.drawImage(sc1, 0, 0, 1080, 1920);
+            ctx.globalAlpha = alpha;
+            ctx.drawImage(sc2, 0, 0, 1080, 1920);
+            ctx.globalAlpha = 1;
+            recorder.requestData();
+          }, FRAME_MS);
+        });
 
-          const alpha = Math.min(elapsed / durationMs, 1);
-          ctx.globalAlpha = 1;
-          ctx.fillStyle = '#000';
-          ctx.fillRect(0, 0, 1080, 1920);
-          drawSingleSlide(sc1, 1 - alpha);
-          drawSingleSlide(sc2, alpha);
-
-          // 500ms마다 데이터 요청
-          if (now - last >= 500) { recorder.requestData(); last = now; }
-          await waitMs(FRAME_MS);
-        }
-        // 마지막 프레임 (완전히 sc2로)
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, 1080, 1920);
-        drawSingleSlide(sc2, 1);
-        ctx.globalAlpha = 1;
-      };
-
-      const holdSlide = async (sc: HTMLCanvasElement, durationMs: number) => {
-        const start = performance.now();
-        let last = start;
-        while (performance.now() - start < durationMs) {
-          drawSlide(sc);
-          const now = performance.now();
-          if (now - last >= 500) { recorder.requestData(); last = now; }
-          await waitMs(FRAME_MS);
-        }
-        // 마지막 프레임 확정
-        drawSlide(sc);
-      };
+      const holdSlide = (sc: HTMLCanvasElement, durationMs: number): Promise<void> =>
+        new Promise(resolve => {
+          const start = performance.now();
+          const interval = setInterval(() => {
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, 1080, 1920);
+            ctx.drawImage(sc, 0, 0, 1080, 1920);
+            recorder.requestData();
+            if (performance.now() - start >= durationMs) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, FRAME_MS);
+        });
 
       // ── STEP 4: 녹화 시작 및 재생 ─────────────────────────────
       // 첫 프레임을 확실히 그린 후 녹화 시작
@@ -1145,6 +1143,32 @@ export default function CardNewsPage() {
               </div>
               <div className="cn-step-body">
 
+                {/* 플랫폼 탭 */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  {([
+                    { id: 'instagram' as const, emoji: '📸', label: '인스타그램', labelEn: 'Instagram', color: '#e1306c', bg: 'rgba(225,48,108,0.15)', border: 'rgba(225,48,108,0.5)' },
+                    { id: 'tiktok'    as const, emoji: '🎵', label: '틱톡',      labelEn: 'TikTok',    color: '#69c9d0', bg: 'rgba(105,201,208,0.15)', border: 'rgba(105,201,208,0.5)' },
+                  ]).map(p => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setTrendHubPlatform(p.id);
+                        if (trendHub) handleTrendHub(trendHubCategory, p.id);
+                      }}
+                      style={{
+                        flex: 1, padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 800,
+                        cursor: 'pointer', transition: 'all 0.2s',
+                        background: trendHubPlatform === p.id ? p.bg : 'rgba(255,255,255,0.03)',
+                        border: `1.5px solid ${trendHubPlatform === p.id ? p.border : 'rgba(255,255,255,0.1)'}`,
+                        color: trendHubPlatform === p.id ? p.color : 'rgba(255,255,255,0.4)',
+                        boxShadow: trendHubPlatform === p.id ? `0 0 12px ${p.bg}` : 'none',
+                      }}
+                    >
+                      {p.emoji} {isEn ? p.labelEn : p.label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* 카테고리 필터 */}
                 <div style={{ marginBottom: 12 }}>
                   <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 }}>{isEn ? 'Select Category' : '카테고리 선택'}</p>
@@ -1199,7 +1223,7 @@ export default function CardNewsPage() {
                   {trendHubLoading ? (
                     <><div className="spinner" />{isEn ? 'Collecting Google News & Trends...' : '구글 뉴스·트렌드 실시간 수집 중...'}</>
                   ) : (
-                    <>⚡ {trendHubCategory === 'all' ? (isEn ? 'All' : '전체') : [
+                    <>{trendHubPlatform === 'tiktok' ? '🎵' : '📸'} {trendHubCategory === 'all' ? (isEn ? 'All' : '전체') : [
                       { id: 'travel', label: '여행/맛집', labelEn: 'Travel/Food' }, { id: 'beauty', label: '뷰티/패션', labelEn: 'Beauty/Fashion' },
                       { id: 'finance', label: '재테크/돈', labelEn: 'Finance/Money' }, { id: 'fitness', label: '운동/다이어트', labelEn: 'Fitness/Diet' },
                       { id: 'mindset', label: '자기계발', labelEn: 'Mindset' }, { id: 'food', label: '요리/레시피', labelEn: 'Cooking' },
@@ -1289,7 +1313,7 @@ export default function CardNewsPage() {
                         {trendHub.cardTopics.map((item, i) => (
                           <div
                             key={i}
-                            onClick={() => setTopic(item.keyword)}
+                            onClick={() => { setTopic(item.keyword); if (trendHubPlatform === 'tiktok') setLanguage('en'); }}
                             style={{
                               background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(245,158,11,0.15)',
                               borderRadius: 12, padding: '14px 16px', cursor: 'pointer',
@@ -1499,9 +1523,28 @@ export default function CardNewsPage() {
                     maxLength={80}
                   />
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>
-                  {isEn ? 'The more specific and provocative, the better. (e.g. "The worst diet foods even doctors won\'t eat")' : '자극적이고 구체적일수록 무조건 떡상합니다. (예: \u201c의사들도 절대 안 먹는 다이어트 최악의 음식\u201d)'}
-                </div>
+                {/* 슬라이드 수 실시간 감지 힌트 */}
+                {(() => {
+                  const m =
+                    topic.match(/(\d+)\s*(?:곳|가지|개|군데|장소|맛집|카페|명소|핫플|레스토랑|스팟|방법|단계|스텝|ways|tips|places|things|steps)/i) ||
+                    topic.match(/(?:BEST|TOP|추천|필수|꿀팁|best|top)\s*(\d+)/i) ||
+                    topic.match(/(\d+)\s*(?:BEST|TOP|best|top)/i) ||
+                    topic.match(/\b(\d+)\b/);
+                  const n = m ? parseInt(m[1]) : null;
+                  const detected = n && n >= 2 && n <= 20 ? n : null;
+                  return detected ? (
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#34d399', fontWeight: 700 }}>
+                      <span>✅</span>
+                      <span>{isEn ? `Will generate ${detected} slides (1 cover + ${detected} body + 1 CTA = ${detected + 2} total)` : `${detected}장 카드뉴스로 생성됩니다 (커버1 + 본문${detected} + CTA1 = 총 ${detected + 2}장)`}</span>
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6, lineHeight: 1.6 }}>
+                      {isEn
+                        ? 'The more specific and provocative, the better. • Add a number to set slide count: "BEST 9", "TOP 5", "7 tips"'
+                        : '자극적이고 구체적일수록 떡상합니다. • 숫자를 넣으면 슬라이드 수 조절: "BEST 9", "TOP 5", "7가지 방법"'}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -2002,25 +2045,30 @@ export default function CardNewsPage() {
                 {/* 릴스 영상 시간 설정 */}
                 <div style={{ marginTop: 4, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '10px 12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#fca5a5' }}>⏱ {isEn ? 'Duration per slide' : '슬라이드당 시간'}</span>
+                    <div>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#fca5a5' }}>⏱ {isEn ? 'Duration per slide' : '슬라이드당 시간'}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginLeft: 6 }}>
+                        {isEn ? `(${slides.length} slides total)` : `(총 ${slides.length}장)`}
+                      </span>
+                    </div>
                     <span style={{
                       fontSize: 11, fontWeight: 800,
                       color: (() => {
-                        const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000;
+                        const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 1900) / 1000;
                         return totalS > 90 ? '#f87171' : totalS > 60 ? '#fbbf24' : '#86efac';
                       })(),
                     }}>
                       {isEn ? 'Est.' : '예상'} {(() => {
-                        const totalS = Math.round((slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000);
+                        const totalS = Math.round((slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 1900) / 1000);
                         return totalS >= 60 ? `${Math.floor(totalS/60)}분 ${totalS%60}초` : `${totalS}초`;
                       })()}
                       {(() => {
-                        const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000;
+                        const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 1900) / 1000;
                         return totalS > 90 ? ' ⚠️' : '';
                       })()}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
                     {([1000, 1500, 2000, 3000] as const).map(ms => (
                       <button
                         key={ms}
@@ -2034,11 +2082,40 @@ export default function CardNewsPage() {
                       >{ms === 1000 ? '1초' : ms === 1500 ? '1.5초' : ms === 2000 ? '2초' : '3초'}</button>
                     ))}
                   </div>
+                  {/* 슬라이드 수에 맞는 자동 최적 버튼 */}
                   {(() => {
-                    const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 600) / 1000;
+                    // 실제 녹화 오버헤드: 안정화300 + 마지막여유600 + waitMs600 + 플러시400 = 1900ms
+                    const FADE = 400, PAMPHLET = pamphletUrl ? 5000 : 0, OVERHEAD = 1900;
+                    const n = slides.length;
+                    const calcTotal = (ms: number) => n * ms + (n - 1) * FADE + PAMPHLET + OVERHEAD;
+                    const currentOver = calcTotal(reelsDurationPerSlide) > 90000;
+                    // 90초 이내 최대 ms (500ms 단위 내림)
+                    const fitMs = Math.floor(((90000 - (n - 1) * FADE - PAMPHLET - OVERHEAD) / n) / 500) * 500;
+                    const clampedMs = Math.max(500, Math.min(3000, fitMs));
+                    const isAlreadySet = reelsDurationPerSlide === clampedMs;
+                    return (
+                      <button
+                        onClick={() => setReelsDurationPerSlide(clampedMs)}
+                        style={{
+                          width: '100%', padding: '6px 0', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                          background: isAlreadySet ? 'rgba(52,211,153,0.15)' : (currentOver ? 'rgba(239,68,68,0.12)' : 'rgba(52,211,153,0.08)'),
+                          border: `1px solid ${isAlreadySet ? '#34d399' : (currentOver ? 'rgba(248,113,113,0.5)' : 'rgba(52,211,153,0.25)')}`,
+                          color: isAlreadySet ? '#34d399' : (currentOver ? '#fca5a5' : 'rgba(52,211,153,0.7)'),
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                        }}
+                      >
+                        {isAlreadySet ? '✅' : (currentOver ? '🔧' : '⚡')}
+                        {isEn
+                          ? `Auto-fit: ${n} slides × ${(clampedMs/1000).toFixed(1)}s = ≈${Math.round(calcTotal(clampedMs)/1000)}s total`
+                          : `자동 최적: ${n}장 × ${(clampedMs/1000).toFixed(1)}초 = 총 약 ${Math.round(calcTotal(clampedMs)/1000)}초`}
+                      </button>
+                    );
+                  })()}
+                  {(() => {
+                    const totalS = (slides.length * reelsDurationPerSlide + (slides.length - 1) * 400 + (pamphletUrl ? 5000 : 0) + 1900) / 1000;
                     return totalS > 90 ? (
                       <p style={{ fontSize: 10, color: '#f87171', marginTop: 6 }}>
-                        ⚠️ {isEn ? 'Instagram Reels max is 90s. Consider shorter duration or fewer slides.' : '인스타 릴스 최대 90초. 슬라이드 시간을 줄이거나 컷을 줄여주세요.'}
+                        ⚠️ {isEn ? 'Reels max is 90s. Click Auto-fit to fix.' : '릴스 최대 90초 초과. 자동 최적 버튼으로 조정하세요.'}
                       </p>
                     ) : null;
                   })()}

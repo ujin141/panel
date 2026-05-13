@@ -67,7 +67,9 @@ async function fetchGoogleTrends(lang: string = 'ko'): Promise<string[]> {
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category') || '';
   const lang = req.nextUrl.searchParams.get('lang') || 'ko';
+  const platform = req.nextUrl.searchParams.get('platform') || 'instagram'; // 'instagram' | 'tiktok'
   const isEn = lang === 'en';
+  const isTikTok = platform === 'tiktok';
 
   const today = new Date().toLocaleDateString(isEn ? 'en-US' : 'ko-KR', {
     year: 'numeric', month: 'long', day: 'numeric',
@@ -99,14 +101,17 @@ export async function GET(req: NextRequest) {
   const baseKeywords = category && catKeywords[category]
     ? catKeywords[category]
     : isEn
-      ? ['Instagram trends 2026', 'social media growth', 'viral content']
-      : ['인스타그램 트렌드', '2026 SNS 트렌드', '카드뉴스 인기'];
+      ? (isTikTok ? ['TikTok trends 2026', 'viral TikTok content', 'short video trends'] : ['Instagram trends 2026', 'social media growth', 'viral content'])
+      : (isTikTok ? ['틱톡 트렌드', '2026 숏폼 트렌드', '틱톡 바이럴'] : ['인스타그램 트렌드', '2026 SNS 트렌드', '카드뉴스 인기']);
 
   // 병렬 수집
+  const platformKw = isTikTok
+    ? (isEn ? 'TikTok viral when:7d' : '틱톡 바이럴 when:7d')
+    : (isEn ? 'Instagram carousel viral when:7d' : '인스타그램 카드뉴스 바이럴 when:7d');
   const [trend1, trend2, trend3, googleTrends] = await Promise.all([
     fetchGoogleNews(`${baseKeywords[0]} when:3d`, lang),
-    fetchGoogleNews(`${baseKeywords[1] || (isEn ? 'viral Instagram' : '인스타 바이럴')} when:7d`, lang),
-    fetchGoogleNews(isEn ? 'Instagram carousel viral when:7d' : '인스타그램 카드뉴스 바이럴 when:7d', lang),
+    fetchGoogleNews(`${baseKeywords[1] || (isEn ? (isTikTok ? 'viral TikTok' : 'viral Instagram') : (isTikTok ? '틱톡 인기' : '인스타 바이럴'))} when:7d`, lang),
+    fetchGoogleNews(platformKw, lang),
     fetchGoogleTrends(lang),
   ]);
 
@@ -142,23 +147,93 @@ export async function GET(req: NextRequest) {
     const catLabel = category || 'all';
     const catName = isEn ? (catLabelEn[catLabel] || 'All') : (catLabelKo[catLabel] || '전체');
 
-    const sysPromptKo = `당신은 2026년 대한민국 SNS 트래픽 폭발 전문 콘텐츠 전략가입니다.
+    const platformNameKo = isTikTok ? '틱톡 (글로벌)' : '인스타그램';
+    const platformNameEn = isTikTok ? 'TikTok (Global)' : 'Instagram';
+
+    // TikTok은 항상 글로벌 영어권 타깃 프롬프트 사용
+    const sysPromptTikTokGlobal = `You are the world's #1 TikTok viral content strategist targeting GLOBAL audiences (US, UK, Australia, Canada, Europe).
+Today: ${today}
+Target: Non-Korean, English-speaking global TikTok users aged 16-35 (Gen Z + Millennials)
+Role: Identify topics that will explode to MILLIONS of views on global TikTok RIGHT NOW.
+TikTok Global Viral Formula:
+- Hook in FIRST 1-3 SECONDS (stop the scroll)
+- Universal emotional triggers: shock, humor, FOMO, inspiration, controversy, satisfying
+- Challenge / duet / stitch potential = more reach
+- Trending audio compatibility
+- "For You Page" algorithm: watch time + shares + comments > likes
+- Avoid culturally specific Korean topics — must appeal globally
+Core principles:
+- ONLY select topics currently trending on global TikTok FYP
+- Tap into universal desires: money, relationships, beauty, health, conspiracy, life hacks
+- Short-form = 3-second hook + emotional payoff + shareable moment
+- ALL output must be in ENGLISH (keywords, hooks, hashtags, reasons — everything)`;
+
+    const sysPromptKo = isTikTok ? sysPromptTikTokGlobal : `당신은 2026년 대한민국 SNS 트래픽 폭발 전문 콘텐츠 전략가입니다.
 오늘: ${today}
 역할: 실시간 뉴스·트렌드 데이터를 분석하여 지금 당장 인스타그램 카드뉴스와 블로그/AI 글쓰기 주제로 사용하면 트래픽이 폭발할 키워드를 선별합니다.
+인스타그램 특성: 카드뉴스 저장율, 정보성 콘텐츠, 해시태그 최적화, 30대 이상 타깃
 핵심 원칙:
 - 지금 이 순간 실제로 검색량·공유가 폭발 중인 주제만 선별
 - 사람들의 결핍(돈·외모·건강·불안)과 호기심을 동시에 자극
-- 카드뉴스는 '저장'이 폭발할 주제, AI글쓰기는 'SEO 검색량'이 폭발할 주제로 분리`;
+- 카드뉴스는 저장 폭발 주제, AI글쓰기는 'SEO 검색량'이 폭발할 주제로 분리`;
 
-    const sysPromptEn = `You are a top global social media content strategist specializing in viral Instagram growth.
+    const sysPromptEn = isTikTok ? sysPromptTikTokGlobal : `You are a top global social media content strategist specializing in viral Instagram growth.
 Today: ${today}
 Role: Analyze real-time news & trend data to identify keywords that will generate explosive traffic for Instagram carousel posts and blog/AI writing topics.
+Instagram specifics: carousel save rate, informational content, hashtag optimization, 25-40 age group
 Core principles:
 - Select only topics with currently exploding search volume and shares
 - Tap into universal desires (money, appearance, health, FOMO) and curiosity
-- Card news = topics that drive massive SAVES, AI writing = topics that drive SEO traffic`;
+- Card news = massive SAVES, AI writing = SEO traffic topics`;
 
-    const userPromptKo = `카테고리: ${catName}
+    // TikTok은 항상 영어 글로벌 프롬프트 사용
+    const contentTypeKo = isTikTok ? 'Global TikTok video topic (under 60 chars, scroll-stopping)' : '카드뉴스 주제 제목 (20자 이내, 저장 폭발형)';
+    const hookDescKo = isTikTok ? 'First 3-second hook line (under 30 chars, instant-share worthy)' : '첫 슬라이드에 쓸 후킹 문구 (15자 이내, 충격적으로)';
+    const userPromptTikTok = `Category: ${catName} | Platform: Global TikTok (targeting US/UK/AU/CA/EU audiences)
+Today (${today}) real-time collected data:
+${fetchedData}
+
+Analyze the data and respond ONLY in JSON. ALL text must be in ENGLISH.
+Generate topics that will go VIRAL on global TikTok FYP for non-Korean, English-speaking audiences.
+
+{
+  "cardTopics": [
+    {
+      "rank": 1,
+      "keyword": "Global TikTok video concept (under 60 chars, viral potential)",
+      "hook": "First 3-second hook text (under 30 chars, scroll-stopper)",
+      "hotScore": 98,
+      "estimatedViews": "1M~10M views",
+      "saves": "Viral share rate",
+      "reason": "Why this explodes on global TikTok FYP right now (under 70 chars)",
+      "hashtags": ["#globaltiktok", "#fyp", "#viral"],
+      "source": "Global TikTok Trends | Google News | AI Analysis",
+      "category": "${catName}",
+      "urgency": "Immediately"
+    }
+  ],
+  "aiWritingTopics": [
+    {
+      "rank": 1,
+      "keyword": "English blog/content topic targeting global readers (under 80 chars, SEO)",
+      "searchVolume": "Est. monthly global searches (e.g., 50K~200K)",
+      "competition": "Low",
+      "hotScore": 92,
+      "reason": "Why this ranks high for global English search (under 70 chars)",
+      "longtailKeywords": ["global longtail 1", "global longtail 2"],
+      "contentAngle": "Best angle to rank #1 for global English readers (under 80 chars)",
+      "source": "Google News | TikTok Trends | AI Analysis",
+      "category": "${catName}"
+    }
+  ]
+}
+
+Return exactly 6 TikTok global viral topics and 6 English writing topics.
+Focus on topics that resonate with GLOBAL English-speaking audiences (US, UK, AU, CA, Europe).
+Do NOT include Korea-specific content. Think: What's trending on US/UK TikTok FYP TODAY?
+ALL keywords, hooks, hashtags, and reasons must be in ENGLISH.`;
+
+    const userPromptKo = isTikTok ? userPromptTikTok : `카테고리: ${catName} | 플랫폼: 인스타그램
 오늘(${today}) 실시간 수집 데이터:
 ${fetchedData}
 
@@ -196,7 +271,7 @@ ${fetchedData}
   ]
 }
 
-카드뉴스 주제 6개, AI글쓰기 주제 6개를 반드시 반환해줘.
+인스타그램 주제 6개, AI글쓰기 주제 6개를 반드시 반환해줘.
 각 주제는 서로 다른 내용이어야 하며, 지금 당장 트래픽이 폭발할 수 있는 주제만 선별해줘.`;
 
     const userPromptEn = `Category: ${catName}
@@ -245,8 +320,8 @@ IMPORTANT: ALL text must be in English for a global audience.`;
     const gptRes = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: isEn ? sysPromptEn : sysPromptKo },
-        { role: 'user', content: isEn ? userPromptEn : userPromptKo },
+        { role: 'system', content: isTikTok ? sysPromptTikTokGlobal : (isEn ? sysPromptEn : sysPromptKo) },
+        { role: 'user', content: isTikTok ? userPromptTikTok : (isEn ? userPromptEn : userPromptKo) },
       ],
       temperature: 0.85,
       max_tokens: 2000,
